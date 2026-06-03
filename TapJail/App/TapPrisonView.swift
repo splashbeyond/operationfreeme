@@ -82,20 +82,13 @@ struct TapPrisonView: View {
 
     private var messageBox: some View {
         Text(currentAccountabilityMessage)
-            .font(.tapJailNote(28))
+            .font(.tapJailNote(30))
             .foregroundStyle(TapJailColor.white)
             .multilineTextAlignment(.center)
             .lineLimit(2)
-            .minimumScaleFactor(0.82)
-            .frame(maxWidth: 260, minHeight: 74)
-            .padding(.horizontal, 18)
-            .padding(.vertical, 12)
-            .background(TapJailColor.surface)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(TapJailColor.divider.opacity(0.75), lineWidth: 1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .minimumScaleFactor(0.68)
+            .frame(maxWidth: 330, minHeight: 74)
+            .padding(.horizontal, 26)
             .accessibilityLabel(currentAccountabilityMessage)
     }
 
