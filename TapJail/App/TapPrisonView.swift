@@ -14,7 +14,7 @@ struct TapPrisonView: View {
                     .padding(.vertical, 20)
 
                 backButton
-                    .position(x: 50, y: proxy.safeAreaInsets.top + 42)
+                    .position(x: 52, y: 72)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
             .background(TapJailColor.black)
