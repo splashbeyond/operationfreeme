@@ -53,22 +53,23 @@ struct TapPrisonView: View {
                 route = .lock
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(TapJailColor.white)
-                    .frame(width: 44, height: 44)
-                    .background(TapJailColor.surface)
+                    .frame(width: 52, height: 52)
+                    .background(TapJailColor.surface.opacity(0.96))
                     .overlay(
                         Circle()
-                            .stroke(TapJailColor.divider, lineWidth: 1)
+                            .stroke(TapJailColor.divider.opacity(0.75), lineWidth: 1)
                     )
                     .clipShape(Circle())
             }
             .buttonStyle(TapJailIconButtonStyle())
-            .padding(.top, 12)
-            .padding(.leading, 20)
+            .padding(.top, 16)
+            .padding(.leading, 24)
             .accessibilityLabel("Back")
 
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.vertical, 20)
         .background(TapJailColor.black)
         .onChange(of: scenePhase) { _, newPhase in
