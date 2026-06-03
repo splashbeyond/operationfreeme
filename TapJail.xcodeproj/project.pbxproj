@@ -18,6 +18,19 @@
 		100000000000000000000009 /* ShieldActionExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000109 /* ShieldActionExtension.swift */; };
 		10000000000000000000000A /* ShieldConfiguration.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 100000000000000000000202 /* ShieldConfiguration.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		10000000000000000000000B /* ShieldAction.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 100000000000000000000203 /* ShieldAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		10000000000000000000000C /* SchibstedGrotesk-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000110 /* SchibstedGrotesk-Regular.ttf */; };
+		10000000000000000000000D /* SchibstedGrotesk-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000111 /* SchibstedGrotesk-Medium.ttf */; };
+		10000000000000000000000E /* SchibstedGrotesk-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000112 /* SchibstedGrotesk-SemiBold.ttf */; };
+		10000000000000000000000F /* SchibstedGrotesk-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000113 /* SchibstedGrotesk-Bold.ttf */; };
+		100000000000000000000010 /* SchibstedGrotesk-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000114 /* SchibstedGrotesk-ExtraBold.ttf */; };
+		100000000000000000000011 /* SchibstedGrotesk-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000115 /* SchibstedGrotesk-Black.ttf */; };
+		100000000000000000000012 /* SchibstedGrotesk-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000116 /* SchibstedGrotesk-Italic.ttf */; };
+		100000000000000000000013 /* SchibstedGrotesk-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000117 /* SchibstedGrotesk-MediumItalic.ttf */; };
+		100000000000000000000014 /* SchibstedGrotesk-SemiBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000118 /* SchibstedGrotesk-SemiBoldItalic.ttf */; };
+		100000000000000000000015 /* SchibstedGrotesk-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000119 /* SchibstedGrotesk-BoldItalic.ttf */; };
+		100000000000000000000016 /* SchibstedGrotesk-ExtraBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000011A /* SchibstedGrotesk-ExtraBoldItalic.ttf */; };
+		100000000000000000000017 /* SchibstedGrotesk-BlackItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000011B /* SchibstedGrotesk-BlackItalic.ttf */; };
+		100000000000000000000018 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000011C /* OFL.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +81,19 @@
 		10000000000000000000010D /* ShieldConfiguration.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShieldConfiguration.entitlements; sourceTree = "<group>"; };
 		10000000000000000000010E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		10000000000000000000010F /* ShieldAction.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShieldAction.entitlements; sourceTree = "<group>"; };
+		100000000000000000000110 /* SchibstedGrotesk-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-Regular.ttf"; sourceTree = "<group>"; };
+		100000000000000000000111 /* SchibstedGrotesk-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-Medium.ttf"; sourceTree = "<group>"; };
+		100000000000000000000112 /* SchibstedGrotesk-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-SemiBold.ttf"; sourceTree = "<group>"; };
+		100000000000000000000113 /* SchibstedGrotesk-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-Bold.ttf"; sourceTree = "<group>"; };
+		100000000000000000000114 /* SchibstedGrotesk-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-ExtraBold.ttf"; sourceTree = "<group>"; };
+		100000000000000000000115 /* SchibstedGrotesk-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-Black.ttf"; sourceTree = "<group>"; };
+		100000000000000000000116 /* SchibstedGrotesk-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-Italic.ttf"; sourceTree = "<group>"; };
+		100000000000000000000117 /* SchibstedGrotesk-MediumItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-MediumItalic.ttf"; sourceTree = "<group>"; };
+		100000000000000000000118 /* SchibstedGrotesk-SemiBoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-SemiBoldItalic.ttf"; sourceTree = "<group>"; };
+		100000000000000000000119 /* SchibstedGrotesk-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-BoldItalic.ttf"; sourceTree = "<group>"; };
+		10000000000000000000011A /* SchibstedGrotesk-ExtraBoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-ExtraBoldItalic.ttf"; sourceTree = "<group>"; };
+		10000000000000000000011B /* SchibstedGrotesk-BlackItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-BlackItalic.ttf"; sourceTree = "<group>"; };
+		10000000000000000000011C /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
 		100000000000000000000201 /* TapJail.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TapJail.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		100000000000000000000202 /* ShieldConfiguration.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		100000000000000000000203 /* ShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -144,8 +170,29 @@
 			isa = PBXGroup;
 			children = (
 				100000000000000000000107 /* Assets.xcassets */,
+				100000000000000000000809 /* Fonts */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		100000000000000000000809 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				100000000000000000000110 /* SchibstedGrotesk-Regular.ttf */,
+				100000000000000000000111 /* SchibstedGrotesk-Medium.ttf */,
+				100000000000000000000112 /* SchibstedGrotesk-SemiBold.ttf */,
+				100000000000000000000113 /* SchibstedGrotesk-Bold.ttf */,
+				100000000000000000000114 /* SchibstedGrotesk-ExtraBold.ttf */,
+				100000000000000000000115 /* SchibstedGrotesk-Black.ttf */,
+				100000000000000000000116 /* SchibstedGrotesk-Italic.ttf */,
+				100000000000000000000117 /* SchibstedGrotesk-MediumItalic.ttf */,
+				100000000000000000000118 /* SchibstedGrotesk-SemiBoldItalic.ttf */,
+				100000000000000000000119 /* SchibstedGrotesk-BoldItalic.ttf */,
+				10000000000000000000011A /* SchibstedGrotesk-ExtraBoldItalic.ttf */,
+				10000000000000000000011B /* SchibstedGrotesk-BlackItalic.ttf */,
+				10000000000000000000011C /* OFL.txt */,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 		100000000000000000000806 /* ShieldConfiguration */ = {
@@ -285,6 +332,19 @@
 			buildActionMask = 2147483647;
 			files = (
 				100000000000000000000007 /* Assets.xcassets in Resources */,
+				10000000000000000000000C /* SchibstedGrotesk-Regular.ttf in Resources */,
+				10000000000000000000000D /* SchibstedGrotesk-Medium.ttf in Resources */,
+				10000000000000000000000E /* SchibstedGrotesk-SemiBold.ttf in Resources */,
+				10000000000000000000000F /* SchibstedGrotesk-Bold.ttf in Resources */,
+				100000000000000000000010 /* SchibstedGrotesk-ExtraBold.ttf in Resources */,
+				100000000000000000000011 /* SchibstedGrotesk-Black.ttf in Resources */,
+				100000000000000000000012 /* SchibstedGrotesk-Italic.ttf in Resources */,
+				100000000000000000000013 /* SchibstedGrotesk-MediumItalic.ttf in Resources */,
+				100000000000000000000014 /* SchibstedGrotesk-SemiBoldItalic.ttf in Resources */,
+				100000000000000000000015 /* SchibstedGrotesk-BoldItalic.ttf in Resources */,
+				100000000000000000000016 /* SchibstedGrotesk-ExtraBoldItalic.ttf in Resources */,
+				100000000000000000000017 /* SchibstedGrotesk-BlackItalic.ttf in Resources */,
+				100000000000000000000018 /* OFL.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

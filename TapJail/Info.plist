@@ -40,10 +40,24 @@
     </dict>
     <key>UILaunchScreen</key>
     <dict/>
+    <key>UIAppFonts</key>
+    <array>
+        <string>SchibstedGrotesk-Regular.ttf</string>
+        <string>SchibstedGrotesk-Medium.ttf</string>
+        <string>SchibstedGrotesk-SemiBold.ttf</string>
+        <string>SchibstedGrotesk-Bold.ttf</string>
+        <string>SchibstedGrotesk-ExtraBold.ttf</string>
+        <string>SchibstedGrotesk-Black.ttf</string>
+        <string>SchibstedGrotesk-Italic.ttf</string>
+        <string>SchibstedGrotesk-MediumItalic.ttf</string>
+        <string>SchibstedGrotesk-SemiBoldItalic.ttf</string>
+        <string>SchibstedGrotesk-BoldItalic.ttf</string>
+        <string>SchibstedGrotesk-ExtraBoldItalic.ttf</string>
+        <string>SchibstedGrotesk-BlackItalic.ttf</string>
+    </array>
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
     </array>
 </dict>
 </plist>
-

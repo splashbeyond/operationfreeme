@@ -1,9 +1,12 @@
-Place licensed Forma DJR app font files here.
+Schibsted Grotesk font files are bundled here.
 
-Preferred files:
+Source:
 
-- Forma DJR UI Light
-- Forma DJR UI Regular
-- Forma DJR UI Bold
+- https://github.com/schibsted/schibsted-grotesk
 
-The app code already checks common Forma DJR PostScript names and falls back to the system font until the licensed files are bundled and registered in `TapJail/Info.plist`.
+License:
+
+- SIL Open Font License, Version 1.1
+- See `OFL.txt`
+
+The app uses Schibsted Grotesk Regular for regular/light text and Schibsted Grotesk Bold for emphasized text.

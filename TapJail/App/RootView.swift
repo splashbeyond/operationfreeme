@@ -61,20 +61,20 @@ extension Font {
             }
         }
 
-        var formaNames: [String] {
+        var fontNames: [String] {
             switch self {
             case .light:
-                return ["FormaDJRUI-Light", "Forma DJR UI Light", "FormaDJRText-Light"]
+                return ["SchibstedGrotesk-Regular"]
             case .regular:
-                return ["FormaDJRUI-Regular", "Forma DJR UI Regular", "FormaDJRText-Regular"]
+                return ["SchibstedGrotesk-Regular"]
             case .bold:
-                return ["FormaDJRUI-Bold", "Forma DJR UI Bold", "FormaDJRText-Bold"]
+                return ["SchibstedGrotesk-Bold"]
             }
         }
     }
 
     static func tapJail(_ size: CGFloat, weight: TapJailWeight = .regular) -> Font {
-        for fontName in weight.formaNames where UIFont(name: fontName, size: size) != nil {
+        for fontName in weight.fontNames where UIFont(name: fontName, size: size) != nil {
             return .custom(fontName, size: size)
         }
 
