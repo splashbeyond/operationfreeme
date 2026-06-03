@@ -7,77 +7,86 @@ struct TapPrisonView: View {
     @State private var tapCount = 0
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            VStack(spacing: 26) {
-                Spacer(minLength: 24)
+        GeometryReader { proxy in
+            ZStack {
+                prisonContent
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .padding(.vertical, 20)
 
-                VStack(spacing: 8) {
-                    Text("Pay the toll")
-                        .font(.tapJail(13, weight: .bold))
-                        .foregroundStyle(TapJailColor.red)
-                        .textCase(.uppercase)
-
-                    Text("\(tapCount)")
-                        .font(.tapJail(88, weight: .bold))
-                        .foregroundStyle(TapJailColor.white)
-                        .contentTransition(.numericText())
-                        .accessibilityLabel("\(tapCount) taps")
-
-                    Text("/ \(jail.tapTarget) taps to break out")
-                        .font(.tapJail(15, weight: .light))
-                        .foregroundStyle(TapJailColor.muted)
+                backButton
+                    .position(x: 50, y: proxy.safeAreaInsets.top + 42)
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .background(TapJailColor.black)
+            .onChange(of: scenePhase) { _, newPhase in
+                guard tapCount < jail.tapTarget else { return }
+                if newPhase == .inactive || newPhase == .background {
+                    tapCount = 0
                 }
+            }
+        }
+    }
 
-                Button {
-                    registerTap()
-                } label: {
-                    Circle()
-                        .fill(TapJailColor.red)
-                        .overlay(
-                            Circle()
-                                .stroke(TapJailColor.white.opacity(0.14), lineWidth: 2)
-                        )
-                        .frame(width: 240, height: 240)
-                        .accessibilityLabel("Tap")
-                        .accessibilityHint("Adds one tap toward breaking out of TapJail.")
-                }
-                .buttonStyle(TapCircleButtonStyle())
+    private var prisonContent: some View {
+        VStack(spacing: 26) {
+            Spacer(minLength: 24)
 
-                ProgressDots(count: tapCount, target: jail.tapTarget)
-                    .padding(.horizontal, 10)
+            VStack(spacing: 8) {
+                Text("Pay the toll")
+                    .font(.tapJail(13, weight: .bold))
+                    .foregroundStyle(TapJailColor.red)
+                    .textCase(.uppercase)
 
-                Spacer(minLength: 24)
+                Text("\(tapCount)")
+                    .font(.tapJail(88, weight: .bold))
+                    .foregroundStyle(TapJailColor.white)
+                    .contentTransition(.numericText())
+                    .accessibilityLabel("\(tapCount) taps")
+
+                Text("/ \(jail.tapTarget) taps to break out")
+                    .font(.tapJail(15, weight: .light))
+                    .foregroundStyle(TapJailColor.muted)
             }
 
             Button {
-                route = .lock
+                registerTap()
             } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(TapJailColor.white)
-                    .frame(width: 52, height: 52)
-                    .background(TapJailColor.surface.opacity(0.96))
+                Circle()
+                    .fill(TapJailColor.red)
                     .overlay(
                         Circle()
-                            .stroke(TapJailColor.divider.opacity(0.75), lineWidth: 1)
+                            .stroke(TapJailColor.white.opacity(0.14), lineWidth: 2)
                     )
-                    .clipShape(Circle())
+                    .frame(width: 240, height: 240)
+                    .accessibilityLabel("Tap")
+                    .accessibilityHint("Adds one tap toward breaking out of TapJail.")
             }
-            .buttonStyle(TapJailIconButtonStyle())
-            .padding(.top, 16)
-            .padding(.leading, 24)
-            .accessibilityLabel("Back")
+            .buttonStyle(TapCircleButtonStyle())
 
+            ProgressDots(count: tapCount, target: jail.tapTarget)
+                .padding(.horizontal, 10)
+
+            Spacer(minLength: 24)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.vertical, 20)
-        .background(TapJailColor.black)
-        .onChange(of: scenePhase) { _, newPhase in
-            guard tapCount < jail.tapTarget else { return }
-            if newPhase == .inactive || newPhase == .background {
-                tapCount = 0
-            }
+    }
+
+    private var backButton: some View {
+        Button {
+            route = .lock
+        } label: {
+            Image(systemName: "chevron.left")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(TapJailColor.white)
+                .frame(width: 52, height: 52)
+                .background(TapJailColor.surface.opacity(0.96))
+                .overlay(
+                    Circle()
+                        .stroke(TapJailColor.divider.opacity(0.75), lineWidth: 1)
+                )
+                .clipShape(Circle())
         }
+        .buttonStyle(TapJailIconButtonStyle())
+        .accessibilityLabel("Back")
     }
 
     private func registerTap() {
