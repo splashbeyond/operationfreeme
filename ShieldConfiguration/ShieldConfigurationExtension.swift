@@ -22,16 +22,22 @@ final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     private func configuration() -> ShieldConfiguration {
         ShieldConfiguration(
             backgroundBlurStyle: nil,
-            backgroundColor: .black,
-            title: ShieldConfiguration.Label(text: "You are in TapJail.", color: .white),
+            backgroundColor: TapJailShieldColor.black,
+            title: ShieldConfiguration.Label(text: "You are in TapJail.", color: TapJailShieldColor.white),
             subtitle: ShieldConfiguration.Label(
                 text: "You used your time. Pay the toll to break out.",
-                color: UIColor.white.withAlphaComponent(0.7)
+                color: TapJailShieldColor.muted
             ),
-            primaryButtonLabel: ShieldConfiguration.Label(text: "Break Out of TapJail", color: .white),
-            primaryButtonBackgroundColor: UIColor(red: 209 / 255, green: 0, blue: 0, alpha: 1),
-            secondaryButtonLabel: ShieldConfiguration.Label(text: "I'm done.", color: .white)
+            primaryButtonLabel: ShieldConfiguration.Label(text: "Break Out of TapJail", color: TapJailShieldColor.black),
+            primaryButtonBackgroundColor: TapJailShieldColor.green,
+            secondaryButtonLabel: ShieldConfiguration.Label(text: "I'm done.", color: TapJailShieldColor.white)
         )
     }
 }
 
+private enum TapJailShieldColor {
+    static let black = UIColor(red: 8 / 255, green: 9 / 255, blue: 10 / 255, alpha: 1)
+    static let white = UIColor(red: 240 / 255, green: 240 / 255, blue: 234 / 255, alpha: 1)
+    static let muted = UIColor(red: 184 / 255, green: 184 / 255, blue: 178 / 255, alpha: 1)
+    static let green = UIColor(red: 16 / 255, green: 163 / 255, blue: 127 / 255, alpha: 1)
+}

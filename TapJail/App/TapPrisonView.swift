@@ -7,18 +7,23 @@ struct TapPrisonView: View {
     @State private var tapCount = 0
 
     var body: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 26) {
             Spacer(minLength: 24)
 
-            VStack(spacing: 4) {
+            VStack(spacing: 8) {
+                Text("Pay the toll")
+                    .font(.tapJail(13, weight: .bold))
+                    .foregroundStyle(TapJailColor.red)
+                    .textCase(.uppercase)
+
                 Text("\(tapCount)")
-                    .font(.tapJail(80))
+                    .font(.tapJail(88, weight: .bold))
                     .foregroundStyle(TapJailColor.white)
                     .contentTransition(.numericText())
                     .accessibilityLabel("\(tapCount) taps")
 
                 Text("/ \(jail.tapTarget) taps to break out")
-                    .font(.tapJail(15))
+                    .font(.tapJail(15, weight: .light))
                     .foregroundStyle(TapJailColor.muted)
             }
 
@@ -27,6 +32,10 @@ struct TapPrisonView: View {
             } label: {
                 Circle()
                     .fill(TapJailColor.red)
+                    .overlay(
+                        Circle()
+                            .stroke(TapJailColor.white.opacity(0.14), lineWidth: 2)
+                    )
                     .frame(width: 240, height: 240)
                     .accessibilityLabel("Tap")
                     .accessibilityHint("Adds one tap toward breaking out of TapJail.")
@@ -81,7 +90,7 @@ struct ProgressDots: View {
         LazyVGrid(columns: columns, spacing: 6) {
             ForEach(0..<target, id: \.self) { index in
                 Circle()
-                    .fill(index < count ? TapJailColor.red : TapJailColor.white.opacity(0.2))
+                    .fill(index < count ? TapJailColor.red : TapJailColor.raised)
                     .frame(width: 12, height: 12)
             }
         }
@@ -97,4 +106,3 @@ struct TapCircleButtonStyle: ButtonStyle {
             .animation(.easeInOut(duration: configuration.isPressed ? 0.08 : 0.12), value: configuration.isPressed)
     }
 }
-
