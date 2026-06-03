@@ -6,6 +6,19 @@ struct TapPrisonView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var tapCount = 0
 
+    private let accountabilityMessages = [
+        "Still doomscrolling? Wow...",
+        "Did you give up on your dreams?",
+        "Like a rat hitting the dopamine button...",
+        "This addiction is real...",
+        "Wow. You said you were gonna be better.",
+        "Your future self is watching this.",
+        "Another tap for another broken promise.",
+        "You came here because the phone won.",
+        "Discipline would have been faster.",
+        "Earn your way out."
+    ]
+
     var body: some View {
         GeometryReader { proxy in
             ZStack {
@@ -14,7 +27,7 @@ struct TapPrisonView: View {
                     .padding(.vertical, 20)
 
                 backButton
-                    .position(x: 52, y: 72)
+                    .position(x: 44, y: 34)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
             .background(TapJailColor.black)
@@ -32,10 +45,7 @@ struct TapPrisonView: View {
             Spacer(minLength: 24)
 
             VStack(spacing: 8) {
-                Text("Pay the toll")
-                    .font(.tapJail(13, weight: .bold))
-                    .foregroundStyle(TapJailColor.red)
-                    .textCase(.uppercase)
+                messageBox
 
                 Text("\(tapCount)")
                     .font(.tapJail(88, weight: .bold))
@@ -68,6 +78,30 @@ struct TapPrisonView: View {
 
             Spacer(minLength: 24)
         }
+    }
+
+    private var messageBox: some View {
+        Text(currentAccountabilityMessage)
+            .font(.tapJailNote(28))
+            .foregroundStyle(TapJailColor.white)
+            .multilineTextAlignment(.center)
+            .lineLimit(2)
+            .minimumScaleFactor(0.82)
+            .frame(maxWidth: 260, minHeight: 74)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 12)
+            .background(TapJailColor.surface)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(TapJailColor.divider.opacity(0.75), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .accessibilityLabel(currentAccountabilityMessage)
+    }
+
+    private var currentAccountabilityMessage: String {
+        let messageIndex = min(tapCount / 10, accountabilityMessages.count - 1)
+        return accountabilityMessages[messageIndex]
     }
 
     private var backButton: some View {

@@ -80,4 +80,12 @@ extension Font {
 
         return .system(size: size, weight: weight.systemWeight, design: .default)
     }
+
+    static func tapJailNote(_ size: CGFloat) -> Font {
+        if UIFont(name: "PatrickHand-Regular", size: size) != nil {
+            return .custom("PatrickHand-Regular", size: size)
+        }
+
+        return .system(size: size, weight: .regular, design: .rounded)
+    }
 }

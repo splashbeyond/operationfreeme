@@ -31,6 +31,8 @@
 		100000000000000000000016 /* SchibstedGrotesk-ExtraBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000011A /* SchibstedGrotesk-ExtraBoldItalic.ttf */; };
 		100000000000000000000017 /* SchibstedGrotesk-BlackItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000011B /* SchibstedGrotesk-BlackItalic.ttf */; };
 		100000000000000000000018 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000011C /* OFL.txt */; };
+		100000000000000000000019 /* PatrickHand-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000011D /* PatrickHand-Regular.ttf */; };
+		10000000000000000000001A /* PatrickHand-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000011E /* PatrickHand-OFL.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -94,6 +96,8 @@
 		10000000000000000000011A /* SchibstedGrotesk-ExtraBoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-ExtraBoldItalic.ttf"; sourceTree = "<group>"; };
 		10000000000000000000011B /* SchibstedGrotesk-BlackItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SchibstedGrotesk-BlackItalic.ttf"; sourceTree = "<group>"; };
 		10000000000000000000011C /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
+		10000000000000000000011D /* PatrickHand-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PatrickHand-Regular.ttf"; sourceTree = "<group>"; };
+		10000000000000000000011E /* PatrickHand-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "PatrickHand-OFL.txt"; sourceTree = "<group>"; };
 		100000000000000000000201 /* TapJail.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TapJail.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		100000000000000000000202 /* ShieldConfiguration.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		100000000000000000000203 /* ShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -191,6 +195,8 @@
 				10000000000000000000011A /* SchibstedGrotesk-ExtraBoldItalic.ttf */,
 				10000000000000000000011B /* SchibstedGrotesk-BlackItalic.ttf */,
 				10000000000000000000011C /* OFL.txt */,
+				10000000000000000000011D /* PatrickHand-Regular.ttf */,
+				10000000000000000000011E /* PatrickHand-OFL.txt */,
 			);
 			path = Fonts;
 			sourceTree = "<group>";
@@ -345,6 +351,8 @@
 				100000000000000000000016 /* SchibstedGrotesk-ExtraBoldItalic.ttf in Resources */,
 				100000000000000000000017 /* SchibstedGrotesk-BlackItalic.ttf in Resources */,
 				100000000000000000000018 /* OFL.txt in Resources */,
+				100000000000000000000019 /* PatrickHand-Regular.ttf in Resources */,
+				10000000000000000000001A /* PatrickHand-OFL.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
