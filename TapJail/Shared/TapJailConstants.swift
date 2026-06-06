@@ -10,6 +10,7 @@ enum TapJailConstants {
         static let dailyBudget = DeviceActivityName("tapjail.daily-budget")
         static let activeSessionBudget = DeviceActivityName("tapjail.active-session-budget")
         static let extensionBudget = DeviceActivityName("tapjail.extension-budget")
+        static let dailyTracking = DeviceActivityName("tapjail.daily-tracking")
         static let extensionMinutes = 15
         static let minimumBudgetMinutes = 15
         static let maximumBudgetMinutes = 480
@@ -82,6 +83,7 @@ enum TapJailConstants {
         static let pendingActivitySelection = "pendingActivitySelection"
         static let hasSeenOnboarding = "hasSeenOnboarding"
         static let onboardingCompletedAt = "onboardingCompletedAt"
+        static let hasSeenSetupGuide = "hasSeenSetupGuide"
     }
 
     static func localDayIdentifier(for date: Date = Date()) -> String {

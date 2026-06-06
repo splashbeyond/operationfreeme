@@ -19,30 +19,30 @@ struct OnboardingView: View {
     // Demo circle (step 2)
     @State private var demoTapCount = 0
 
-    // Analyzing (step 8)
+    // Analyzing (step 9)
     @State private var analysisProgress: Double = 0
 
-    // Life dots (step 12)
+    // Life dots (step 13)
     @State private var dotsRevealed = 0
 
-    // Commitment circle (step 16)
+    // Commitment circle (step 19)
     @State private var commitTapCount = 0
     @State private var committed = false
 
-    // Time savings animation (step 14)
+    // Time savings animation (step 15)
     @State private var tsDotRevealCount = 0
     @State private var tsPhoneYearsReduced = false
 
-    // Notifications screen (step 20)
+    // Notifications screen (step 21)
     @State private var notifCardsVisible = false
 
-    // Star review (step 17)
+    // Star review (step 18)
     @State private var starRating = 0
 
     // Auth error
     @State private var showAuthError = false
 
-    private let totalSteps = 22
+    private let totalSteps = 23
 
     private let sleepYears = 27
     private let workYears = 13
@@ -119,25 +119,26 @@ struct OnboardingView: View {
                 case 0:  welcomeScreen
                 case 1:  mechanicScreen
                 case 2:  demoScreen
-                case 3:  notYourFaultScreen
-                case 4:  personalizeScreen
-                case 5:  goalScreen
-                case 6:  painScreen
-                case 7:  screenTimeScreen
-                case 8:  analyzingScreen
-                case 9:  profileScreen
-                case 10: oofScreen
-                case 11: yearsLostScreen
-                case 12: lifeDotsScreen
-                case 13: goodNewsScreen
-                case 14: timeSavingsScreen
-                case 15: whyItWorksScreen
-                case 16: researchScreen
-                case 17: reviewScreen
-                case 18: commitmentScreen
-                case 19: permissionScreen
-                case 20: notificationsScreen
-                case 21: beforeAfterScreen
+                case 3:  escalationScreen
+                case 4:  notYourFaultScreen
+                case 5:  personalizeScreen
+                case 6:  goalScreen
+                case 7:  painScreen
+                case 8:  screenTimeScreen
+                case 9:  analyzingScreen
+                case 10: profileScreen
+                case 11: oofScreen
+                case 12: yearsLostScreen
+                case 13: lifeDotsScreen
+                case 14: goodNewsScreen
+                case 15: timeSavingsScreen
+                case 16: whyItWorksScreen
+                case 17: researchScreen
+                case 18: reviewScreen
+                case 19: commitmentScreen
+                case 20: permissionScreen
+                case 21: notificationsScreen
+                case 22: beforeAfterScreen
                 default: paywallScreen
                 }
             }
@@ -317,7 +318,127 @@ struct OnboardingView: View {
         .animation(.spring(response: 0.35, dampingFraction: 0.72), value: demoTapCount)
     }
 
-    // MARK: - Step 3: Not Your Fault
+    // MARK: - Step 3: Escalation Chart
+
+    private var escalationScreen: some View {
+        VStack(spacing: 0) {
+            Spacer().frame(height: 80)
+
+            // Header — same size, left-aligned
+            VStack(alignment: .leading, spacing: 8) {
+                Text("It gets harder\nevery time.")
+                    .font(.tapJail(32, weight: .bold))
+                    .foregroundStyle(TapJailColor.white)
+
+                Text("Every 15 minutes past your budget, the next breakout doubles.")
+                    .font(.tapJail(15, weight: .light))
+                    .foregroundStyle(TapJailColor.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 24)
+
+            Spacer()
+
+            // Bar chart — compact, no fixed height so it breathes
+            Chart(escalationStages) { stage in
+                BarMark(
+                    x: .value("Stage", stage.label),
+                    y: .value("Taps", stage.taps)
+                )
+                .foregroundStyle(TapJailColor.red)
+                .cornerRadius(4)
+                .annotation(position: .top, alignment: .center, spacing: 4) {
+                    Text(stage.taps >= 1000 ? "1k" : "\(stage.taps)")
+                        .font(.tapJail(10, weight: .bold))
+                        .foregroundStyle(TapJailColor.white)
+                }
+            }
+            .chartYAxis(.hidden)
+            .chartXAxis {
+                AxisMarks { _ in
+                    AxisValueLabel()
+                        .font(.tapJail(9))
+                        .foregroundStyle(TapJailColor.muted)
+                }
+            }
+            .frame(height: 150)
+            .padding(.horizontal, 24)
+
+            Spacer()
+
+            // Stage breakdown rows — tighter padding
+            VStack(spacing: 0) {
+                escalationRow(time: "Budget hit", taps: 100,  isFirst: true)
+                Divider().overlay(TapJailColor.divider)
+                escalationRow(time: "+15 min",   taps: 200,  isFirst: false)
+                Divider().overlay(TapJailColor.divider)
+                escalationRow(time: "+30 min",   taps: 400,  isFirst: false)
+                Divider().overlay(TapJailColor.divider)
+                escalationRow(time: "+45 min",   taps: 800,  isFirst: false)
+                Divider().overlay(TapJailColor.divider)
+                escalationRow(time: "+60 min",   taps: 1000, isFirst: false)
+                Divider().overlay(TapJailColor.divider)
+                escalationRow(time: "+75 min+",  taps: 1000, isFirst: false)
+            }
+            .background(TapJailColor.surface)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(TapJailColor.divider, lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .padding(.horizontal, 24)
+
+            Spacer()
+
+            Text("The pain is the point.")
+                .font(.tapJail(13))
+                .foregroundStyle(TapJailColor.muted)
+
+            Spacer()
+
+            primaryButton("Understood") { advance() }
+                .padding(.horizontal, 24)
+
+            Spacer().frame(height: 50)
+        }
+    }
+
+    private var escalationStages: [EscalationStage] {
+        [
+            EscalationStage(label: "Budget\nhit", taps: 100),
+            EscalationStage(label: "+15\nmin",    taps: 200),
+            EscalationStage(label: "+30\nmin",    taps: 400),
+            EscalationStage(label: "+45\nmin",    taps: 800),
+            EscalationStage(label: "+60\nmin",    taps: 1000),
+            EscalationStage(label: "+75\nmin+",   taps: 1000),
+        ]
+    }
+
+    private func escalationRow(time: String, taps: Int, isFirst: Bool) -> some View {
+        HStack {
+            Text(time)
+                .font(.tapJail(14, weight: isFirst ? .bold : .regular))
+                .foregroundStyle(isFirst ? TapJailColor.red : TapJailColor.muted)
+                .frame(width: 90, alignment: .leading)
+
+            Spacer()
+
+            HStack(spacing: 4) {
+                Text(taps >= 1000 ? "1,000" : "\(taps)")
+                    .font(.tapJail(16, weight: .bold))
+                    .foregroundStyle(TapJailColor.white)
+                    .monospacedDigit()
+                Text("taps")
+                    .font(.tapJail(13))
+                    .foregroundStyle(TapJailColor.muted)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 9)
+    }
+
+    // MARK: - Step 4: Not Your Fault (was 3)
 
     private var notYourFaultScreen: some View {
         scrollScreen {
@@ -1386,12 +1507,6 @@ struct OnboardingView: View {
         }
         .onAppear {
             withAnimation { notifCardsVisible = true }
-            // Fire system prompt 0.5s after screen appears
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in
-                    DispatchQueue.main.async { advance() }
-                }
-            }
         }
     }
 
@@ -1804,4 +1919,10 @@ struct DailyHours: Identifiable {
     let id: Int
     let day: String
     let hours: Double
+}
+
+struct EscalationStage: Identifiable {
+    let id = UUID()
+    let label: String
+    let taps: Int
 }

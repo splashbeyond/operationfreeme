@@ -49,6 +49,14 @@ final class JailController: ObservableObject {
         loadState()
         migrateOnboardingGraceDayIfNeeded()
         syncReportConfigurationIfNeeded()
+        startDailyTracking()
+    }
+
+    var isFamilyControlsAuthorized: Bool {
+        switch authorizationStatus {
+        case .approved: return true
+        default: return false
+        }
     }
 
     var hasSelection: Bool {
@@ -162,10 +170,25 @@ final class JailController: ObservableObject {
             authorizationStatus = AuthorizationCenter.shared.authorizationStatus
             errorMessage = nil
             requestNotificationPermission()
+            startDailyTracking()
         } catch {
             authorizationStatus = AuthorizationCenter.shared.authorizationStatus
             errorMessage = error.localizedDescription
         }
+    }
+
+    func startDailyTracking() {
+        guard isFamilyControlsAuthorized else { return }
+        let schedule = DeviceActivitySchedule(
+            intervalStart: DateComponents(hour: 0, minute: 0),
+            intervalEnd: DateComponents(hour: 23, minute: 59),
+            repeats: true
+        )
+        try? activityCenter.startMonitoring(
+            TapJailConstants.DeviceActivity.dailyTracking,
+            during: schedule,
+            events: [:]
+        )
     }
 
     func saveSelection() {

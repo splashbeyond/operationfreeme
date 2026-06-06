@@ -7,6 +7,8 @@ struct LockView: View {
     @EnvironmentObject private var jail: JailController
     @State private var presentedSheet: HomeSheet?
     @State private var isLimitEditorPresented = false
+    @State private var showSetupGuide = false
+    @AppStorage(TapJailConstants.StorageKey.hasSeenSetupGuide) private var hasSeenSetupGuide = false
 
     var body: some View {
         NavigationStack {
@@ -74,6 +76,17 @@ struct LockView: View {
             .onAppear {
                 jail.refreshAuthorizationStatus()
                 jail.refreshSharedState()
+                if !hasSeenSetupGuide && jail.hasSeenOnboarding && !jail.isBudgetMonitoring {
+                    showSetupGuide = true
+                }
+            }
+            .fullScreenCover(isPresented: $showSetupGuide) {
+                SetupGuideSheet {
+                    hasSeenSetupGuide = true
+                    showSetupGuide = false
+                    jail.beginBudgetEditing()
+                    isLimitEditorPresented = true
+                }
             }
         }
     }
@@ -346,24 +359,17 @@ private struct BudgetEditorView: View {
                 }
                 .homePanel()
 
+                // Primary button — permanently disabled once monitoring is active
                 Button {
-                    if jail.isBudgetMonitoring {
-                        isChangeConfirmationPresented = true
-                    } else if jail.commitBudgetDraft() {
+                    if !jail.isBudgetMonitoring, jail.commitBudgetDraft() {
                         dismiss()
                     }
                 } label: {
-                    Text(updateButtonTitle)
+                    Text(jail.isBudgetMonitoring ? "Locked In" : "Set Daily App Limit")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(TapJailPrimaryButtonStyle())
-                .disabled(
-                    !hasScreenTimeAuthorization
-                        || !jail.hasDraftSelection
-                        || (!jail.bonusBudgetChangeAvailable
-                            && !jail.canScheduleBudgetChangeToday
-                            && jail.isBudgetMonitoring)
-                )
+                .disabled(!hasScreenTimeAuthorization || !jail.hasDraftSelection || jail.isBudgetMonitoring)
 
                 if jail.isBudgetMonitoring {
                     Text(changeRuleText)
@@ -372,6 +378,17 @@ private struct BudgetEditorView: View {
                         .frame(maxWidth: .infinity)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
+
+                    // Change limit — only shown when a change is actually available
+                    if jail.bonusBudgetChangeAvailable || jail.canScheduleBudgetChangeToday {
+                        Button {
+                            isChangeConfirmationPresented = true
+                        } label: {
+                            Text(jail.bonusBudgetChangeAvailable ? "Update Today's Limit" : "Set Tomorrow's Limit")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(TapJailSecondaryButtonStyle())
+                    }
                 }
 
                 if !hasScreenTimeAuthorization {
@@ -468,6 +485,7 @@ private struct BudgetEditorView: View {
 private struct UsageView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var jail: JailController
+    @State private var screenTimeLoaderVisible = true
 
     private var todayInterval: DateInterval {
         Calendar.current.dateInterval(of: .day, for: Date()) ?? DateInterval()
@@ -487,24 +505,48 @@ private struct UsageView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                // Live screen time report from DeviceActivity
-                if jail.isBudgetMonitoring {
-                    DeviceActivityReport(
-                        .init("tapjail.budget"),
-                        filter: DeviceActivityFilter(
-                            segment: .daily(during: todayInterval),
-                            users: .all,
-                            devices: .init([.iPhone])
+                // Live screen time from Screen Time system — all apps, whole day
+                if jail.isFamilyControlsAuthorized {
+                    ZStack {
+                        DeviceActivityReport(
+                            .init("tapjail.daily-tracking"),
+                            filter: DeviceActivityFilter(
+                                segment: .daily(during: todayInterval),
+                                users: .all,
+                                devices: .init([.iPhone])
+                            )
                         )
-                    )
-                    .frame(minHeight: 100)
-                    .padding(20)
+                        .padding(20)
+
+                        // Loader sits on top until the extension renders
+                        if screenTimeLoaderVisible {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(TapJailColor.surface)
+                                .overlay {
+                                    VStack(spacing: 10) {
+                                        ProgressView()
+                                            .tint(TapJailColor.muted)
+                                        Text("Loading screen time…")
+                                            .font(.tapJail(13, weight: .regular))
+                                            .foregroundStyle(TapJailColor.muted)
+                                    }
+                                }
+                                .transition(.opacity)
+                        }
+                    }
+                    .frame(minHeight: 120)
                     .background(TapJailColor.surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .stroke(TapJailColor.divider, lineWidth: 1)
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .task {
+                        try? await Task.sleep(nanoseconds: 1_500_000_000)
+                        withAnimation(.easeOut(duration: 0.4)) {
+                            screenTimeLoaderVisible = false
+                        }
+                    }
                 }
 
                 VStack(spacing: 0) {
@@ -683,6 +725,102 @@ private struct SettingsView: View {
     }
 }
 
+// MARK: - Setup Guide
+
+private struct SetupGuideSheet: View {
+    let onGetStarted: () -> Void
+
+    var body: some View {
+        ZStack {
+            TapJailColor.black.ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Time to build\nthe cage.")
+                        .font(.tapJail(38, weight: .bold))
+                        .foregroundStyle(TapJailColor.white)
+
+                    Text("Three steps and you're locked in.")
+                        .font(.tapJail(16, weight: .light))
+                        .foregroundStyle(TapJailColor.muted)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 24)
+
+                Spacer()
+
+                VStack(spacing: 12) {
+                    setupStep(
+                        number: "1",
+                        title: "Set your daily limit",
+                        detail: "How many minutes per day you're allowed before TapJail locks you out."
+                    )
+                    setupStep(
+                        number: "2",
+                        title: "Choose your apps",
+                        detail: "Pick the specific apps that waste your time. TapJail only blocks what you select."
+                    )
+                    setupStep(
+                        number: "3",
+                        title: "Lock it in",
+                        detail: "Tap \"Set Daily App Limit\" to commit. Changes after that only take effect tomorrow."
+                    )
+                }
+                .padding(.horizontal, 24)
+
+                Spacer()
+
+                Button {
+                    onGetStarted()
+                } label: {
+                    Text("Let's do it")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(TapJailPrimaryButtonStyle())
+                .padding(.horizontal, 24)
+
+                Spacer().frame(height: 50)
+            }
+        }
+    }
+
+    private func setupStep(number: String, title: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(TapJailColor.red)
+                    .frame(width: 36, height: 36)
+                Text(number)
+                    .font(.tapJail(16, weight: .bold))
+                    .foregroundStyle(TapJailColor.white)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.tapJail(16, weight: .bold))
+                    .foregroundStyle(TapJailColor.white)
+                Text(detail)
+                    .font(.tapJail(14, weight: .light))
+                    .foregroundStyle(TapJailColor.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+        }
+        .padding(16)
+        .background(TapJailColor.surface)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(TapJailColor.divider, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+// MARK: - View Helpers
+
 private extension View {
     func homePanel() -> some View {
         self
@@ -711,12 +849,18 @@ private func durationText(_ minutes: Int) -> String {
 }
 
 struct TapJailPrimaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.tapJail(17, weight: .bold))
-            .foregroundStyle(TapJailColor.black)
+            .foregroundStyle(isEnabled ? TapJailColor.black : TapJailColor.muted)
             .padding(.vertical, 16)
-            .background(TapJailColor.green.opacity(configuration.isPressed ? 0.78 : 1))
+            .background(
+                isEnabled
+                    ? TapJailColor.green.opacity(configuration.isPressed ? 0.78 : 1)
+                    : TapJailColor.surface
+            )
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.easeInOut(duration: 0.08), value: configuration.isPressed)
