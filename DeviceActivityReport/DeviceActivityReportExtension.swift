@@ -25,17 +25,37 @@ private struct BudgetReportScene: DeviceActivityReportScene {
             }
         }
 
-        let defaults = UserDefaults(suiteName: "group.com.piperstudio.tapjail")
-        let activeBudget = defaults?.integer(forKey: "activeBudgetMinutes") ?? 0
-        let savedBudget = activeBudget > 0
-            ? activeBudget
-            : defaults?.integer(forKey: "dailyBudgetMinutes") ?? 0
-        let budgetMinutes = savedBudget > 0 ? savedBudget : 60
+        let budgetMinutes = loadBudgetMinutes()
 
         return BudgetReportConfiguration(
             elapsed: elapsed,
             budget: TimeInterval(budgetMinutes * 60)
         )
+    }
+
+    private func loadBudgetMinutes() -> Int {
+        guard let containerURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: "group.com.piperstudio.tapjail"
+        ) else {
+            return 60
+        }
+
+        let url = containerURL.appendingPathComponent(
+            "TapJailReportConfiguration.plist"
+        )
+
+        guard let data = try? Data(contentsOf: url),
+              let configuration = try? PropertyListSerialization.propertyList(
+                from: data,
+                options: [],
+                format: nil
+              ) as? [String: Any],
+              let budgetMinutes = configuration["budgetMinutes"] as? Int,
+              budgetMinutes > 0 else {
+            return 60
+        }
+
+        return budgetMinutes
     }
 }
 

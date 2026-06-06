@@ -31,6 +31,7 @@ final class JailController: ObservableObject {
             tapTarget = debugTarget
             loadState()
             migrateOnboardingGraceDayIfNeeded()
+            syncReportConfigurationIfNeeded()
             return
         }
 #endif
@@ -40,6 +41,7 @@ final class JailController: ObservableObject {
         defaults?.set(tapTarget, forKey: TapJailConstants.StorageKey.tapTarget)
         loadState()
         migrateOnboardingGraceDayIfNeeded()
+        syncReportConfigurationIfNeeded()
     }
 
     var hasSelection: Bool {
@@ -180,6 +182,10 @@ final class JailController: ObservableObject {
                 budgetStartedAt,
                 forKey: TapJailConstants.StorageKey.budgetStartedAt
             )
+            writeReportConfiguration(
+                budgetMinutes: thresholdMinutes,
+                startedAt: budgetStartedAt
+            )
             self.budgetStartedAt = budgetStartedAt
             defaults?.set(true, forKey: TapJailConstants.StorageKey.isBudgetMonitoring)
             defaults?.set(false, forKey: TapJailConstants.StorageKey.isLockActive)
@@ -211,6 +217,7 @@ final class JailController: ObservableObject {
         defaults?.set(false, forKey: TapJailConstants.StorageKey.isBudgetMonitoring)
         defaults?.removeObject(forKey: TapJailConstants.StorageKey.activeBudgetMinutes)
         defaults?.removeObject(forKey: TapJailConstants.StorageKey.budgetStartedAt)
+        removeReportConfiguration()
         budgetStartedAt = nil
         defaults?.set(false, forKey: TapJailConstants.StorageKey.budgetThresholdReached)
         defaults?.set(
@@ -315,6 +322,29 @@ final class JailController: ObservableObject {
         if isBudgetMonitoring, hasSelection {
             startDailyBudget()
         }
+    }
+
+    private func syncReportConfigurationIfNeeded() {
+        guard isBudgetMonitoring else { return }
+
+        let activeBudget = defaults?.integer(
+            forKey: TapJailConstants.StorageKey.activeBudgetMinutes
+        ) ?? 0
+        let budgetMinutes = activeBudget > 0 ? activeBudget : dailyBudgetMinutes
+        let startedAt = budgetStartedAt ?? Date()
+
+        if budgetStartedAt == nil {
+            defaults?.set(
+                startedAt,
+                forKey: TapJailConstants.StorageKey.budgetStartedAt
+            )
+            budgetStartedAt = startedAt
+        }
+
+        writeReportConfiguration(
+            budgetMinutes: budgetMinutes,
+            startedAt: startedAt
+        )
     }
 
     private func applyShield(selection: FamilyActivitySelection) {
@@ -430,5 +460,37 @@ final class JailController: ObservableObject {
 
     private func requestNotificationPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    }
+
+    private func writeReportConfiguration(budgetMinutes: Int, startedAt: Date) {
+        guard let url = reportConfigurationURL else { return }
+
+        let configuration: [String: Any] = [
+            "budgetMinutes": budgetMinutes,
+            "startedAt": startedAt
+        ]
+
+        guard let data = try? PropertyListSerialization.data(
+            fromPropertyList: configuration,
+            format: .binary,
+            options: 0
+        ) else {
+            return
+        }
+
+        try? data.write(to: url, options: .atomic)
+    }
+
+    private func removeReportConfiguration() {
+        guard let url = reportConfigurationURL else { return }
+        try? FileManager.default.removeItem(at: url)
+    }
+
+    private var reportConfigurationURL: URL? {
+        FileManager.default
+            .containerURL(
+                forSecurityApplicationGroupIdentifier: TapJailConstants.appGroupID
+            )?
+            .appendingPathComponent("TapJailReportConfiguration.plist")
     }
 }

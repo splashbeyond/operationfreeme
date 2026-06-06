@@ -15,6 +15,7 @@
 - Changed Choose Apps to dismiss the budget editor before presenting Apple's activity picker, avoiding stacked-sheet conflicts.
 - Aligned first-day budgets to the moment monitoring starts, so Screen Time used earlier that day does not immediately consume a new user's allowance.
 - Limited that grace baseline to the calendar day onboarding is completed; later days count selected-app usage from midnight.
+- Replaced report-extension App Group preference reads with an atomic shared configuration file to avoid CFPrefs container warnings.
 
 ## Screen Time Reporting Note
 
