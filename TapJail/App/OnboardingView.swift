@@ -1,5 +1,7 @@
+import Charts
 import StoreKit
 import SwiftUI
+import UserNotifications
 
 struct OnboardingView: View {
     @Binding var route: AppRoute
@@ -7,9 +9,9 @@ struct OnboardingView: View {
 
     @State private var step = 0
 
-    // Quiz
-    @State private var selectedGoal: String? = nil
-    @State private var selectedPain: String? = nil
+    // Quiz (multi-select)
+    @State private var selectedGoals: Set<String> = []
+    @State private var selectedPains: Set<String> = []
 
     // Screen time slider
     @State private var screenTimeHours: Double = 3
@@ -31,13 +33,16 @@ struct OnboardingView: View {
     @State private var tsDotRevealCount = 0
     @State private var tsPhoneYearsReduced = false
 
+    // Notifications screen (step 20)
+    @State private var notifCardsVisible = false
+
     // Star review (step 17)
     @State private var starRating = 0
 
     // Auth error
     @State private var showAuthError = false
 
-    private let totalSteps = 21
+    private let totalSteps = 22
 
     private let sleepYears = 27
     private let workYears = 13
@@ -131,7 +136,8 @@ struct OnboardingView: View {
                 case 17: reviewScreen
                 case 18: commitmentScreen
                 case 19: permissionScreen
-                case 20: beforeAfterScreen
+                case 20: notificationsScreen
+                case 21: beforeAfterScreen
                 default: paywallScreen
                 }
             }
@@ -438,9 +444,9 @@ struct OnboardingView: View {
 
     private var goalScreen: some View {
         quizScreen(
-            question: "What's your main goal?",
+            question: "What are your goals?",
             options: goals,
-            selected: $selectedGoal
+            selected: $selectedGoals
         ) { advance() }
     }
 
@@ -459,14 +465,14 @@ struct OnboardingView: View {
         quizScreen(
             question: "How does your phone affect you most?",
             options: pains,
-            selected: $selectedPain
+            selected: $selectedPains
         ) { advance() }
     }
 
     private func quizScreen(
         question: String,
         options: [String],
-        selected: Binding<String?>,
+        selected: Binding<Set<String>>,
         onContinue: @escaping () -> Void
     ) -> some View {
         scrollScreen {
@@ -477,14 +483,24 @@ struct OnboardingView: View {
                 .foregroundStyle(TapJailColor.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Spacer().frame(height: 28)
+            Text("Select all that apply.")
+                .font(.tapJail(14))
+                .foregroundStyle(TapJailColor.muted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Spacer().frame(height: 24)
 
             VStack(spacing: 10) {
                 ForEach(options, id: \.self) { option in
+                    let isSelected = selected.wrappedValue.contains(option)
                     Button {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         withAnimation(.spring(response: 0.22, dampingFraction: 0.65)) {
-                            selected.wrappedValue = option
+                            if isSelected {
+                                selected.wrappedValue.remove(option)
+                            } else {
+                                selected.wrappedValue.insert(option)
+                            }
                         }
                     } label: {
                         HStack {
@@ -492,7 +508,7 @@ struct OnboardingView: View {
                                 .font(.tapJail(16))
                                 .foregroundStyle(TapJailColor.white)
                             Spacer()
-                            if selected.wrappedValue == option {
+                            if isSelected {
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 14, weight: .bold))
                                     .foregroundStyle(TapJailColor.red)
@@ -500,22 +516,16 @@ struct OnboardingView: View {
                         }
                         .padding(.horizontal, 16)
                         .frame(height: 56)
-                        .background(
-                            selected.wrappedValue == option
-                                ? TapJailColor.red.opacity(0.12)
-                                : TapJailColor.surface
-                        )
+                        .background(isSelected ? TapJailColor.red.opacity(0.12) : TapJailColor.surface)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
                                 .stroke(
-                                    selected.wrappedValue == option
-                                        ? TapJailColor.red
-                                        : TapJailColor.divider,
-                                    lineWidth: selected.wrappedValue == option ? 1.5 : 1
+                                    isSelected ? TapJailColor.red : TapJailColor.divider,
+                                    lineWidth: isSelected ? 1.5 : 1
                                 )
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .scaleEffect(selected.wrappedValue == option ? 1.01 : 1)
+                        .scaleEffect(isSelected ? 1.01 : 1)
                     }
                     .buttonStyle(.plain)
                 }
@@ -523,7 +533,7 @@ struct OnboardingView: View {
 
             Spacer()
 
-            primaryButton("Continue", disabled: selected.wrappedValue == nil) { onContinue() }
+            primaryButton("Continue", disabled: selected.wrappedValue.isEmpty) { onContinue() }
         }
     }
 
@@ -553,7 +563,7 @@ struct OnboardingView: View {
 
             Spacer().frame(height: 20)
 
-            Slider(value: $screenTimeHours, in: 0...12, step: 0.5)
+            Slider(value: $screenTimeHours, in: 1...12, step: 0.5)
                 .tint(TapJailColor.red)
                 .padding(.horizontal, 4)
                 .onChange(of: screenTimeHours) { _, _ in
@@ -561,7 +571,7 @@ struct OnboardingView: View {
                 }
 
             HStack {
-                Text("0h").font(.tapJail(12)).foregroundStyle(TapJailColor.muted)
+                Text("1h").font(.tapJail(12)).foregroundStyle(TapJailColor.muted)
                 Spacer()
                 Text("12h+").font(.tapJail(12)).foregroundStyle(TapJailColor.muted)
             }
@@ -582,7 +592,6 @@ struct OnboardingView: View {
 
     private var screenTimeLabel: String {
         switch screenTimeHours {
-        case ..<1:   return "Good starting point."
         case ..<2:   return "Below average."
         case ..<4:   return "The average person's range."
         case ..<6:   return "That's a significant chunk of your day."
@@ -597,25 +606,35 @@ struct OnboardingView: View {
     private var analyzingScreen: some View {
         VStack {
             Spacer()
-            VStack(spacing: 10) {
-                Text("Analyzing your habits...")
-                    .font(.tapJail(16))
-                    .foregroundStyle(TapJailColor.muted)
 
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(TapJailColor.white.opacity(0.1))
-                        Capsule()
-                            .fill(TapJailColor.red)
-                            .frame(width: geo.size.width * analysisProgress)
-                            .animation(.easeInOut(duration: 2.5), value: analysisProgress)
+            VStack(spacing: 24) {
+                Image("TapJailIcon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 64, height: 64)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                VStack(spacing: 10) {
+                    Text("Analyzing your habits...")
+                        .font(.tapJail(16))
+                        .foregroundStyle(TapJailColor.muted)
+
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(TapJailColor.white.opacity(0.1))
+                            Capsule()
+                                .fill(TapJailColor.red)
+                                .frame(width: geo.size.width * analysisProgress)
+                                .animation(.easeInOut(duration: 2.5), value: analysisProgress)
+                        }
+                        .frame(height: 3)
                     }
                     .frame(height: 3)
+                    .padding(.horizontal, 24)
                 }
-                .frame(height: 3)
-                .padding(.horizontal, 24)
             }
-            .padding(.bottom, 50)
+
+            Spacer()
         }
         .task {
             analysisProgress = 1.0
@@ -625,6 +644,34 @@ struct OnboardingView: View {
     }
 
     // MARK: - Step 9: Profile Reveal
+
+    private var screenTimeScore: Int {
+        switch screenTimeHours {
+        case ..<2:   return 88
+        case ..<3:   return 74
+        case ..<4:   return 61
+        case ..<5:   return 50
+        case ..<6:   return 40
+        case ..<8:   return 29
+        case ..<10:  return 18
+        default:     return 9
+        }
+    }
+
+    private var screenTimeScoreReason: String {
+        switch screenTimeScore {
+        case 75...:
+            return "Better than most — but this still adds up to \(yearsLost) years of your life."
+        case 55...:
+            return "In the average range. That's \(yearsLost) years gone to a screen."
+        case 35...:
+            return "Your phone is consuming a significant chunk of your waking life."
+        case 20...:
+            return "This is affecting your focus, sleep, and mental clarity."
+        default:
+            return "Your phone is your dominant daily activity. This is the exact problem TapJail fixes."
+        }
+    }
 
     private var profileScreen: some View {
         scrollScreen {
@@ -650,41 +697,38 @@ struct OnboardingView: View {
 
             Spacer().frame(height: 24)
 
-            VStack(spacing: 14) {
-                metricBar(label: "Phone dependency", fill: min(1.0, screenTimeHours / 12.0))
-                metricBar(label: "Daily time lost", fill: min(1.0, screenTimeHours / 10.0))
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Screen Time Score")
+                    .font(.tapJail(13))
+                    .foregroundStyle(TapJailColor.muted)
+
+                HStack(alignment: .lastTextBaseline, spacing: 4) {
+                    Text("\(screenTimeScore)")
+                        .font(.tapJail(64, weight: .bold))
+                        .foregroundStyle(TapJailColor.red)
+                    Text("/100")
+                        .font(.tapJail(24))
+                        .foregroundStyle(TapJailColor.muted)
+                }
+
+                Text(screenTimeScoreReason)
+                    .font(.tapJail(14))
+                    .foregroundStyle(TapJailColor.muted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+            .background(TapJailColor.surface)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(TapJailColor.red.opacity(0.35), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
             Spacer()
 
             primaryButton("Makes sense") { advance() }
         }
-    }
-
-    private func metricBar(label: String, fill: Double) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(label)
-                .font(.tapJail(13))
-                .foregroundStyle(TapJailColor.muted)
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(TapJailColor.raised)
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(TapJailColor.red)
-                        .frame(width: geo.size.width * fill)
-                }
-                .frame(height: 8)
-            }
-            .frame(height: 8)
-        }
-        .padding(16)
-        .background(TapJailColor.surface)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(TapJailColor.divider, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     // MARK: - Step 10: OOF
@@ -781,7 +825,7 @@ struct OnboardingView: View {
             VStack(spacing: 8) {
                 HStack(spacing: 20) {
                     legendDot(color: TapJailColor.raised, label: "\(freeYears) yrs free time")
-                    legendDot(color: TapJailColor.red, label: "\(yearsLost) yrs on your phone")
+                    legendDot(color: TapJailColor.red, label: "\(yearsLost) yrs screen time")
                 }
                 HStack(spacing: 20) {
                     legendDot(color: TapJailColor.blue, label: "\(sleepYears) yrs asleep")
@@ -877,10 +921,11 @@ struct OnboardingView: View {
             Spacer().frame(height: 28)
 
             LifeDotsGrid(
-                yearsLost: tsPhoneYearsReduced ? reducedYearsLost : yearsLost,
+                yearsLost: yearsLost,
                 sleepYears: sleepYears,
                 workYears: workYears,
-                revealed: tsDotRevealCount
+                revealed: tsDotRevealCount,
+                savedCount: tsPhoneYearsReduced ? yearsRecovered : 0
             )
 
             Spacer().frame(height: 20)
@@ -888,11 +933,23 @@ struct OnboardingView: View {
             VStack(spacing: 8) {
                 HStack(spacing: 20) {
                     legendDot(color: TapJailColor.raised, label: "\(freeYears) yrs free time")
-                    legendDot(color: TapJailColor.red, label: "phone")
+                    legendDot(color: TapJailColor.red, label: "\(yearsLost) yrs screen time")
                 }
                 HStack(spacing: 20) {
                     legendDot(color: TapJailColor.blue, label: "\(sleepYears) yrs asleep")
                     legendDot(color: TapJailColor.green, label: "\(workYears) yrs working")
+                }
+                if tsPhoneYearsReduced {
+                    HStack(spacing: 6) {
+                        ZStack {
+                            Circle().fill(TapJailColor.red).frame(width: 10, height: 10)
+                            Circle().stroke(Color.purple, lineWidth: 2).frame(width: 10, height: 10)
+                        }
+                        Text("\(yearsRecovered) yrs saved with TapJail")
+                            .font(.tapJail(12))
+                            .foregroundStyle(TapJailColor.muted)
+                    }
+                    .transition(.opacity)
                 }
             }
 
@@ -1077,12 +1134,12 @@ struct OnboardingView: View {
         scrollScreen {
             Spacer().frame(height: 16)
 
-            Text("Enjoying TapJail so far?")
+            Text("Want to help others\nreduce screen time?")
                 .font(.tapJail(26, weight: .bold))
                 .foregroundStyle(TapJailColor.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("Your rating helps others find it.")
+            Text("Leave a rating — it helps others find TapJail.")
                 .font(.tapJail(15))
                 .foregroundStyle(TapJailColor.muted)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1143,6 +1200,7 @@ struct OnboardingView: View {
                     .font(.tapJail(16))
                     .foregroundStyle(TapJailColor.muted)
             }
+            .frame(maxWidth: .infinity)
             .multilineTextAlignment(.center)
 
             Spacer().frame(height: 32)
@@ -1151,6 +1209,8 @@ struct OnboardingView: View {
                 .font(.tapJail(22, weight: .bold))
                 .foregroundStyle(committed ? TapJailColor.green : TapJailColor.white)
                 .contentTransition(.numericText())
+                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
 
             Spacer().frame(height: 24)
 
@@ -1261,7 +1321,123 @@ struct OnboardingView: View {
         .padding(.horizontal, 24)
     }
 
-    // MARK: - Step 20: Before / After
+    // MARK: - Step 20: Notifications
+
+    private var notificationsScreen: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            // Header
+            VStack(spacing: 8) {
+                Image(systemName: "bell.badge.fill")
+                    .font(.system(size: 36))
+                    .foregroundStyle(TapJailColor.red)
+
+                Text("Don't miss a win.")
+                    .font(.tapJail(28, weight: .bold))
+                    .foregroundStyle(TapJailColor.white)
+
+                Text("Here's what TapJail will send you:")
+                    .font(.tapJail(15))
+                    .foregroundStyle(TapJailColor.muted)
+            }
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 24)
+
+            Spacer().frame(height: 28)
+
+            // Real notification previews
+            VStack(spacing: 10) {
+                mockNotifCard(
+                    title: "Tap to enter TapJail",
+                    body: "Tap 100 times to break out of TapJail."
+                )
+                .offset(y: notifCardsVisible ? 0 : -16)
+                .opacity(notifCardsVisible ? 1 : 0)
+                .animation(.spring(response: 0.45, dampingFraction: 0.72).delay(0.05), value: notifCardsVisible)
+
+                mockNotifCard(
+                    title: "Unlocked until midnight",
+                    body: "Your daily budget and tap count reset at midnight."
+                )
+                .offset(y: notifCardsVisible ? 0 : -16)
+                .opacity(notifCardsVisible ? 1 : 0)
+                .animation(.spring(response: 0.45, dampingFraction: 0.72).delay(0.18), value: notifCardsVisible)
+            }
+            .padding(.horizontal, 24)
+
+            Spacer()
+
+            // CTA
+            VStack(spacing: 12) {
+                primaryButton("Allow Notifications") {
+                    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in
+                        DispatchQueue.main.async { advance() }
+                    }
+                }
+
+                Button("Not now") { advance() }
+                    .font(.tapJail(15))
+                    .foregroundStyle(TapJailColor.muted)
+            }
+            .padding(.horizontal, 24)
+
+            Spacer().frame(height: 50)
+        }
+        .onAppear {
+            withAnimation { notifCardsVisible = true }
+            // Fire system prompt 0.5s after screen appears
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in
+                    DispatchQueue.main.async { advance() }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func mockNotifCard(title: String, body: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image("TapJailIcon")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 42, height: 42)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(alignment: .center) {
+                    Text("TAPJAIL")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("now")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.primary)
+
+                Text(body)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(16)
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Step 21: Before / After
 
     private var beforeAfterScreen: some View {
         scrollScreen {
@@ -1275,17 +1451,17 @@ struct OnboardingView: View {
             Spacer().frame(height: 28)
 
             HStack(spacing: 16) {
-                beforeAfterColumn(
+                screenTimeChartCard(
                     label: "BEFORE",
-                    value: "\(Int(screenTimeHours))h avg",
-                    labelColor: TapJailColor.red,
-                    valueColor: TapJailColor.red
+                    subtitle: "\(Int(screenTimeHours))h / day",
+                    data: beforeDailyData,
+                    accentColor: TapJailColor.red
                 )
-                beforeAfterColumn(
+                screenTimeChartCard(
                     label: "WITH TAPJAIL",
-                    value: "~\(max(1, Int(screenTimeHours / 2)))h avg",
-                    labelColor: TapJailColor.green,
-                    valueColor: TapJailColor.green
+                    subtitle: "~\(afterHoursLabel) / day",
+                    data: afterDailyData,
+                    accentColor: TapJailColor.green
                 )
             }
 
@@ -1303,22 +1479,73 @@ struct OnboardingView: View {
         }
     }
 
-    private func beforeAfterColumn(label: String, value: String, labelColor: Color, valueColor: Color) -> some View {
-        VStack(spacing: 8) {
-            Text(label)
-                .font(.tapJail(11, weight: .bold))
-                .foregroundStyle(labelColor)
-                .tracking(1.2)
-            Text(value)
-                .font(.tapJail(24, weight: .bold))
-                .foregroundStyle(valueColor)
+    private let dayVariation: [Double] = [0.88, 1.0, 0.82, 1.08, 0.94, 1.16, 1.06]
+    private let dayLabels = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+
+    private var beforeDailyData: [DailyHours] {
+        zip(0..., zip(dayLabels, dayVariation)).map { i, pair in
+            DailyHours(id: i, day: pair.0, hours: min(12, screenTimeHours * pair.1))
         }
-        .frame(maxWidth: .infinity)
-        .padding(20)
+    }
+
+    private var afterHoursValue: Double { max(0.5, screenTimeHours * 0.22) }
+
+    private var afterHoursLabel: String {
+        afterHoursValue < 1 ? "30 min" : "\(Int(afterHoursValue))h"
+    }
+
+    private var afterDailyData: [DailyHours] {
+        zip(0..., zip(dayLabels, dayVariation)).map { i, pair in
+            DailyHours(id: i, day: pair.0, hours: min(afterHoursValue * 1.4, afterHoursValue * pair.1))
+        }
+    }
+
+    private func screenTimeChartCard(
+        label: String,
+        subtitle: String,
+        data: [DailyHours],
+        accentColor: Color
+    ) -> some View {
+        let yMax = max(screenTimeHours * 1.2, 2)
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.tapJail(10, weight: .bold))
+                .foregroundStyle(accentColor)
+                .tracking(1.5)
+
+            Text(subtitle)
+                .font(.tapJail(20, weight: .bold))
+                .foregroundStyle(accentColor)
+
+            Chart {
+                ForEach(data) { item in
+                    BarMark(
+                        x: .value("Day", item.day),
+                        y: .value("Hours", item.hours)
+                    )
+                    .foregroundStyle(accentColor)
+                    .cornerRadius(4)
+                }
+            }
+            .chartYScale(domain: 0...yMax)
+            .chartYAxis(.hidden)
+            .chartXAxis {
+                AxisMarks(values: .automatic) { _ in
+                    AxisValueLabel()
+                        .foregroundStyle(TapJailColor.muted)
+                }
+            }
+            .chartPlotStyle { plot in
+                plot.background(Color.clear)
+            }
+            .frame(height: 100)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
         .background(TapJailColor.surface)
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(labelColor.opacity(0.3), lineWidth: 1)
+                .stroke(accentColor.opacity(0.35), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
@@ -1348,7 +1575,7 @@ struct OnboardingView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
-    // MARK: - Step 21: Paywall
+    // MARK: - Step 22 (default): Paywall
 
     private var paywallScreen: some View {
         ScrollView {
@@ -1530,6 +1757,7 @@ struct LifeDotsGrid: View {
     let sleepYears: Int
     let workYears: Int
     let revealed: Int
+    var savedCount: Int = 0
 
     private let totalDots = 80
     private let columns = 10
@@ -1547,6 +1775,8 @@ struct LifeDotsGrid: View {
         ) {
             ForEach(0..<totalDots, id: \.self) { index in
                 let isRevealed = index < revealed
+                // Saved dots are the first `savedCount` dots inside the phone zone
+                let isSaved = savedCount > 0 && index >= phoneStart && index < phoneStart + savedCount
                 let color: Color = {
                     if index >= phoneStart { return TapJailColor.red }
                     if index >= workStart  { return TapJailColor.green }
@@ -1557,9 +1787,21 @@ struct LifeDotsGrid: View {
                 Circle()
                     .fill(isRevealed ? color : Color.clear)
                     .frame(width: dotSize, height: dotSize)
+                    .overlay(
+                        Circle()
+                            .stroke(Color.purple, lineWidth: 2)
+                            .opacity(isSaved && isRevealed ? 1 : 0)
+                    )
                     .animation(.easeOut(duration: 0.04).delay(Double(index) * 0.015), value: revealed)
                     .animation(.easeInOut(duration: 0.35).delay(Double(totalDots - 1 - index) * 0.02), value: yearsLost)
+                    .animation(.easeInOut(duration: 0.3), value: savedCount)
             }
         }
     }
+}
+
+struct DailyHours: Identifiable {
+    let id: Int
+    let day: String
+    let hours: Double
 }
