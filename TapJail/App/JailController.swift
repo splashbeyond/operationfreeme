@@ -162,29 +162,38 @@ final class JailController: ObservableObject {
             : TapJailConstants.DeviceActivity.extensionMinutes
         saveSelection()
 
+        let budgetStartedAt = Date()
+        let calendar = Calendar.current
         let schedule = DeviceActivitySchedule(
-            intervalStart: DateComponents(hour: 0, minute: 0),
+            intervalStart: calendar.dateComponents(
+                [.hour, .minute, .second],
+                from: budgetStartedAt
+            ),
             intervalEnd: DateComponents(hour: 23, minute: 59, second: 59),
-            repeats: true
+            repeats: false
         )
-        let usesOnboardingGrace = isOnboardingDay
         let event = makeEvent(
             minutes: thresholdMinutes,
-            includesPastActivity: !usesOnboardingGrace
+            includesPastActivity: false
         )
-        let budgetStartedAt = Date()
 
         do {
             activityCenter.stopMonitoring([
                 TapJailConstants.DeviceActivity.dailyBudget,
+                TapJailConstants.DeviceActivity.activeSessionBudget,
                 TapJailConstants.DeviceActivity.extensionBudget
             ])
             clearShield()
             try activityCenter.startMonitoring(
-                TapJailConstants.DeviceActivity.dailyBudget,
+                TapJailConstants.DeviceActivity.activeSessionBudget,
                 during: schedule,
                 events: [TapJailConstants.DeviceActivity.event(for: 0): event]
             )
+            guard activityCenter.events(
+                for: TapJailConstants.DeviceActivity.activeSessionBudget
+            )[TapJailConstants.DeviceActivity.event(for: 0)] != nil else {
+                throw BudgetMonitoringError.eventWasNotRegistered
+            }
             if !isDebugTest {
                 dailyBudgetMinutes = thresholdMinutes
                 defaults?.set(
@@ -231,6 +240,7 @@ final class JailController: ObservableObject {
     func stopDailyBudget() {
         activityCenter.stopMonitoring([
             TapJailConstants.DeviceActivity.dailyBudget,
+            TapJailConstants.DeviceActivity.activeSessionBudget,
             TapJailConstants.DeviceActivity.extensionBudget
         ])
         defaults?.set(false, forKey: TapJailConstants.StorageKey.isBudgetMonitoring)
@@ -506,5 +516,13 @@ final class JailController: ObservableObject {
                 forSecurityApplicationGroupIdentifier: TapJailConstants.appGroupID
             )?
             .appendingPathComponent("TapJailReportConfiguration.plist")
+    }
+}
+
+private enum BudgetMonitoringError: LocalizedError {
+    case eventWasNotRegistered
+
+    var errorDescription: String? {
+        "iOS did not retain the Screen Time threshold. Please reconnect Screen Time and try again."
     }
 }

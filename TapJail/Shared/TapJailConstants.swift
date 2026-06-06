@@ -8,6 +8,7 @@ enum TapJailConstants {
 
     enum DeviceActivity {
         static let dailyBudget = DeviceActivityName("tapjail.daily-budget")
+        static let activeSessionBudget = DeviceActivityName("tapjail.active-session-budget")
         static let extensionBudget = DeviceActivityName("tapjail.extension-budget")
         static let extensionMinutes = 15
         static let minimumBudgetMinutes = 15

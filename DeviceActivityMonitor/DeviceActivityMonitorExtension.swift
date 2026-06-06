@@ -7,6 +7,7 @@ import UserNotifications
 final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     private let decoder = JSONDecoder()
     private let store = ManagedSettingsStore()
+    private let activityCenter = DeviceActivityCenter()
     private let defaults = UserDefaults(suiteName: TapJailConstants.appGroupID)
 
     override func intervalDidStart(for activity: DeviceActivityName) {
@@ -19,6 +20,10 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         clearShield()
         defaults?.set(false, forKey: TapJailConstants.StorageKey.isLockActive)
         defaults?.set(false, forKey: TapJailConstants.StorageKey.budgetThresholdReached)
+
+        if activity == TapJailConstants.DeviceActivity.activeSessionBudget {
+            startRepeatingDailyBudget()
+        }
     }
 
     override func eventDidReachThreshold(
@@ -104,5 +109,55 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         store.shield.applications = nil
         store.shield.applicationCategories = nil
         store.shield.webDomains = nil
+    }
+
+    private func startRepeatingDailyBudget() {
+        guard defaults?.bool(
+            forKey: TapJailConstants.StorageKey.isBudgetMonitoring
+        ) == true,
+        let selection = loadSelection() else {
+            return
+        }
+
+        let savedMinutes = defaults?.integer(
+            forKey: TapJailConstants.StorageKey.activeBudgetMinutes
+        ) ?? 0
+        let budgetMinutes = savedMinutes > 0 ? savedMinutes : 60
+        let schedule = DeviceActivitySchedule(
+            intervalStart: DateComponents(hour: 0, minute: 0),
+            intervalEnd: DateComponents(hour: 23, minute: 59, second: 59),
+            repeats: true
+        )
+        let event: DeviceActivityEvent
+
+        if #available(iOS 17.4, *) {
+            event = DeviceActivityEvent(
+                applications: selection.applicationTokens,
+                categories: selection.categoryTokens,
+                webDomains: selection.webDomainTokens,
+                threshold: DateComponents(minute: budgetMinutes),
+                includesPastActivity: false
+            )
+        } else {
+            event = DeviceActivityEvent(
+                applications: selection.applicationTokens,
+                categories: selection.categoryTokens,
+                webDomains: selection.webDomainTokens,
+                threshold: DateComponents(minute: budgetMinutes)
+            )
+        }
+
+        do {
+            activityCenter.stopMonitoring([
+                TapJailConstants.DeviceActivity.dailyBudget
+            ])
+            try activityCenter.startMonitoring(
+                TapJailConstants.DeviceActivity.dailyBudget,
+                during: schedule,
+                events: [TapJailConstants.DeviceActivity.event(for: 0): event]
+            )
+        } catch {
+            defaults?.set(false, forKey: TapJailConstants.StorageKey.isBudgetMonitoring)
+        }
     }
 }
