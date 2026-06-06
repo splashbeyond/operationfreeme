@@ -1,42 +1,83 @@
 import FamilyControls
+import DeviceActivity
 import SwiftUI
+
+private extension DeviceActivityReport.Context {
+    static let tapJailBudget = Self("tapjail.budget")
+}
 
 struct LockView: View {
     @Binding var route: AppRoute
     @EnvironmentObject private var jail: JailController
+    @State private var presentedSheet: HomeSheet?
     @State private var isPickerPresented = false
+    @State private var shouldPresentPicker = false
+    @State private var shouldReturnToBudgetEditor = false
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                VStack(alignment: .leading, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("TapJail")
-                            .font(.tapJail(52, weight: .bold))
-                            .foregroundStyle(TapJailColor.white)
+            VStack(alignment: .leading, spacing: 20) {
+                brandHeader
+                budgetHero
 
-                        Text(jail.isLockActive ? "You are locked in." : "Choose the apps. Start the lock.")
-                            .font(.tapJail(17, weight: .light))
-                            .foregroundStyle(TapJailColor.muted)
+                VStack(spacing: 12) {
+                    navigationRow(
+                        icon: "slider.horizontal.3",
+                        title: "Budget & Apps",
+                        detail: budgetAndAppsDetail
+                    ) {
+                        presentedSheet = .budget
+                    }
+
+                    navigationRow(
+                        icon: "chart.bar.xaxis",
+                        title: "Usage",
+                        detail: usageDetail
+                    ) {
+                        presentedSheet = .usage
+                    }
+
+                    navigationRow(
+                        icon: "gearshape",
+                        title: "Settings",
+                        detail: settingsDetail
+                    ) {
+                        presentedSheet = .settings
                     }
                 }
 
-                statusPanel
-                selectionPanel
-                budgetPanel
-                controls
-
                 if let errorMessage = jail.errorMessage {
-                    Text(errorMessage)
-                        .font(.tapJail(15, weight: .bold))
+                    Label(errorMessage, systemImage: "exclamationmark.circle.fill")
+                        .font(.tapJail(14, weight: .bold))
                         .foregroundStyle(TapJailColor.red)
                         .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 4)
                 }
             }
-            .padding(24)
+            .padding(.horizontal, 20)
+            .padding(.top, 18)
+            .padding(.bottom, 32)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(TapJailColor.black)
+        .sheet(item: $presentedSheet) { sheet in
+            NavigationStack {
+                switch sheet {
+                case .budget:
+                    BudgetEditorView {
+                        shouldPresentPicker = true
+                        shouldReturnToBudgetEditor = true
+                        presentedSheet = nil
+                    }
+                case .usage:
+                    UsageView()
+                case .settings:
+                    SettingsView(route: $route)
+                }
+            }
+            .presentationDragIndicator(.visible)
+            .presentationBackground(TapJailColor.black)
+        }
         .familyActivityPicker(
             headerText: "Choose what TapJail blocks.",
             footerText: "These selections stay on this device.",
@@ -46,6 +87,20 @@ struct LockView: View {
         .onChange(of: isPickerPresented) { _, isPresented in
             if !isPresented {
                 jail.saveSelection()
+                guard shouldReturnToBudgetEditor else { return }
+                shouldReturnToBudgetEditor = false
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(300))
+                    presentedSheet = .budget
+                }
+            }
+        }
+        .onChange(of: presentedSheet) { _, sheet in
+            guard sheet == nil, shouldPresentPicker else { return }
+            shouldPresentPicker = false
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(350))
+                isPickerPresented = true
             }
         }
         .onAppear {
@@ -54,178 +109,223 @@ struct LockView: View {
         }
     }
 
-    private var statusPanel: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Screen Time")
-                .font(.tapJail(22, weight: .bold))
+    private var brandHeader: some View {
+        HStack(spacing: 12) {
+            Image("TapJailLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 42, height: 42)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .accessibilityHidden(true)
 
-            Text(authorizationCopy)
-                .font(.tapJail(15, weight: .light))
-                .foregroundStyle(TapJailColor.muted)
+            Text("TapJail")
+                .font(.tapJail(30, weight: .bold))
+                .foregroundStyle(TapJailColor.white)
 
-            if !hasScreenTimeAuthorization {
+            Spacer()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("TapJail")
+    }
+
+    private var budgetHero: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            HStack {
+                Label("TODAY'S BUDGET", systemImage: "hourglass")
+                    .font(.tapJail(12, weight: .bold))
+                    .foregroundStyle(TapJailColor.muted)
+                    .tracking(1.2)
+
+                Spacer()
+
+                statusPill
+            }
+
+            VStack(alignment: .leading, spacing: 5) {
+                if jail.isBudgetMonitoring && jail.hasSelection {
+                    DeviceActivityReport(
+                        .tapJailBudget,
+                        filter: dailyUsageFilter
+                    )
+                    .id(jail.budgetStartedAt)
+                    .frame(height: 82)
+                } else {
+                    Text(heroValue)
+                        .font(.tapJail(52, weight: .bold))
+                        .foregroundStyle(TapJailColor.white)
+                        .monospacedDigit()
+                        .minimumScaleFactor(0.75)
+
+                    Text(heroCaption)
+                        .font(.tapJail(16, weight: .light))
+                        .foregroundStyle(TapJailColor.muted)
+                }
+            }
+
+            if !jail.isBudgetMonitoring {
+                BudgetProgressBar(progress: heroProgress)
+            }
+
+            if !jail.isBudgetMonitoring {
                 Button {
-                    Task { await jail.requestAuthorization() }
+                    presentedSheet = .budget
                 } label: {
-                    Text("Authorize Screen Time")
+                    Text(jail.hasSelection ? "Start Daily Budget" : "Set Your Daily Budget")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(TapJailPrimaryButtonStyle())
             }
         }
-        .panelStyle()
-    }
-
-    private var selectionPanel: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Locked Apps")
-                .font(.tapJail(22, weight: .bold))
-
-            Text(jail.selectionSummary)
-                .font(.tapJail(15, weight: .light))
-                .foregroundStyle(TapJailColor.muted)
-
-            Button {
-                isPickerPresented = true
-            } label: {
-                Text("Choose Apps")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(TapJailSecondaryButtonStyle())
-        }
-        .panelStyle()
-    }
-
-    private var controls: some View {
-        VStack(spacing: 12) {
-            Button {
-                jail.lockNow()
-            } label: {
-                Text("Lock Now")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(TapJailPrimaryButtonStyle())
-            .disabled(!hasScreenTimeAuthorization || !jail.hasSelection)
-
-            Button {
-                route = .prison
-            } label: {
-                Text("Enter Tap Prison")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(TapJailSecondaryButtonStyle())
-            .disabled(!jail.isLockActive)
-
-            Button {
-                jail.unlock()
-            } label: {
-                Text("Unlock")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(TapJailDestructiveButtonStyle())
-
-            Button {
-                jail.sendPrisonRouteTestNotification()
-            } label: {
-                Text("Test Prison Notification")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(TapJailSecondaryButtonStyle())
-        }
-    }
-
-    private var budgetPanel: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Daily Budget")
-                    .font(.tapJail(22, weight: .bold))
-
-                Spacer()
-
-                Text(budgetDurationText)
-                    .font(.tapJail(17, weight: .bold))
-                    .foregroundStyle(TapJailColor.green)
-            }
-
-            Text("Usage is shared across everything selected above and resets at midnight.")
-                .font(.tapJail(15, weight: .light))
-                .foregroundStyle(TapJailColor.muted)
-
-            Slider(
-                value: Binding(
-                    get: { Double(jail.dailyBudgetMinutes) },
-                    set: { jail.dailyBudgetMinutes = Int($0) }
-                ),
-                in: budgetRange,
-                step: Double(TapJailConstants.DeviceActivity.budgetStepMinutes)
+        .padding(22)
+        .background(
+            LinearGradient(
+                colors: [TapJailColor.surface, TapJailColor.row.opacity(0.78)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
             )
-            .tint(TapJailColor.green)
-            .accessibilityLabel("Daily app budget")
-            .accessibilityValue(budgetDurationText)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(TapJailColor.divider.opacity(0.8), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
 
-            Button {
-                jail.startDailyBudget()
-            } label: {
-                Text(jail.isBudgetMonitoring ? "Update Daily Budget" : "Start Daily Budget")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(TapJailPrimaryButtonStyle())
-            .disabled(!hasScreenTimeAuthorization || !jail.hasSelection)
+    private var statusPill: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(statusColor)
+                .frame(width: 7, height: 7)
 
-#if DEBUG
-            Button {
-                jail.startDailyBudget(minutes: 1)
-            } label: {
-                Text("Start 1-Minute Device Test")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(TapJailSecondaryButtonStyle())
-            .disabled(!hasScreenTimeAuthorization || !jail.hasSelection)
+            Text(statusText)
+                .font(.tapJail(12, weight: .bold))
+                .foregroundStyle(TapJailColor.white)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(TapJailColor.raised)
+        .clipShape(Capsule())
+    }
 
-            if jail.isBudgetMonitoring {
-                Button {
-                    jail.stopDailyBudget()
-                } label: {
-                    Text("Stop Budget Test")
-                        .frame(maxWidth: .infinity)
+    private func navigationRow(
+        icon: String,
+        title: String,
+        detail: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 15) {
+                Image(systemName: icon)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(TapJailColor.green)
+                    .frame(width: 42, height: 42)
+                    .background(TapJailColor.green.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.tapJail(17, weight: .bold))
+                        .foregroundStyle(TapJailColor.white)
+
+                    Text(detail)
+                        .font(.tapJail(14, weight: .light))
+                        .foregroundStyle(TapJailColor.muted)
+                        .lineLimit(1)
                 }
-                .buttonStyle(TapJailDestructiveButtonStyle())
+
+                Spacer(minLength: 8)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(TapJailColor.muted)
             }
-#endif
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(TapJailColor.surface)
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(TapJailColor.divider.opacity(0.7), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .contentShape(Rectangle())
         }
-        .panelStyle()
+        .buttonStyle(TapJailRowButtonStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("Opens \(title)")
     }
 
-    private var budgetDurationText: String {
-        let hours = jail.dailyBudgetMinutes / 60
-        let minutes = jail.dailyBudgetMinutes % 60
-
-        if hours == 0 {
-            return "\(minutes) min"
-        }
-        if minutes == 0 {
-            return "\(hours) hr"
-        }
-        return "\(hours) hr \(minutes) min"
+    private var heroValue: String {
+        jail.isLockActive ? "0 min" : durationText(jail.dailyBudgetMinutes)
     }
 
-    private var budgetRange: ClosedRange<Double> {
-        let minimum = Double(TapJailConstants.DeviceActivity.minimumBudgetMinutes)
-        let maximum = Double(TapJailConstants.DeviceActivity.maximumBudgetMinutes)
-        return minimum...maximum
+    private var heroCaption: String {
+        if jail.isLockActive {
+            return "Daily budget reached"
+        }
+        if jail.isBudgetMonitoring {
+            return "\(durationText(jail.dailyBudgetMinutes)) allocated today"
+        }
+        return "Choose a limit for selected apps"
     }
 
-    private var authorizationCopy: String {
-        switch jail.authorizationStatus {
-        case .notDetermined:
-            return "Authorization has not been granted."
-        case .denied:
-            return "Authorization was denied."
-        case .approved, .approvedWithDataAccess:
-            return "Authorization approved."
-        @unknown default:
-            return "Authorization status unknown."
+    private var heroProgress: Double {
+        if jail.isLockActive { return 1 }
+        return jail.isBudgetMonitoring ? 0 : 0
+    }
+
+    private var statusText: String {
+        if jail.isLockActive { return "LOCKED" }
+        return jail.isBudgetMonitoring ? "ACTIVE" : "NOT SET"
+    }
+
+    private var statusColor: Color {
+        if jail.isLockActive { return TapJailColor.red }
+        return jail.isBudgetMonitoring ? TapJailColor.green : TapJailColor.muted
+    }
+
+    private var budgetAndAppsDetail: String {
+        "\(durationText(jail.dailyBudgetMinutes)) · \(jail.selectionSummary)"
+    }
+
+    private var usageDetail: String {
+        jail.isBudgetMonitoring ? "View today's Screen Time status" : "Start a budget to track today"
+    }
+
+    private var settingsDetail: String {
+        hasScreenTimeAuthorization ? "Screen Time connected" : "Screen Time access needed"
+    }
+
+    private var dailyUsageFilter: DeviceActivityFilter {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfToday = calendar.startOfDay(for: now)
+        let savedStart = jail.budgetStartedAt
+        let onboardingCompletedAt = UserDefaults(suiteName: TapJailConstants.appGroupID)?
+            .object(forKey: TapJailConstants.StorageKey.onboardingCompletedAt) as? Date
+        let isOnboardingDay = onboardingCompletedAt.map {
+            calendar.isDate($0, inSameDayAs: now)
+        } ?? false
+        let reportStart: Date
+
+        if isOnboardingDay,
+           let savedStart,
+           calendar.isDate(savedStart, inSameDayAs: now) {
+            reportStart = max(savedStart, startOfToday)
+        } else {
+            reportStart = startOfToday
         }
+
+        let endOfToday = calendar.date(byAdding: .day, value: 1, to: startOfToday) ?? now
+        let interval = DateInterval(start: reportStart, end: endOfToday)
+
+        return DeviceActivityFilter(
+            segment: .daily(during: interval),
+            users: .all,
+            devices: .all,
+            applications: jail.selection.applicationTokens,
+            categories: jail.selection.categoryTokens,
+            webDomains: jail.selection.webDomainTokens
+        )
     }
 
     private var hasScreenTimeAuthorization: Bool {
@@ -238,19 +338,380 @@ struct LockView: View {
     }
 }
 
-private extension View {
-    func panelStyle() -> some View {
-        self
-            .foregroundStyle(TapJailColor.white)
+private enum HomeSheet: String, Identifiable {
+    case budget
+    case usage
+    case settings
+
+    var id: String { rawValue }
+}
+
+private struct BudgetEditorView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var jail: JailController
+    let chooseApps: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Daily allowance")
+                            .font(.tapJail(17, weight: .bold))
+                            .foregroundStyle(TapJailColor.white)
+
+                        Spacer()
+
+                        Text(durationText(jail.dailyBudgetMinutes))
+                            .font(.tapJail(22, weight: .bold))
+                            .foregroundStyle(TapJailColor.green)
+                            .monospacedDigit()
+                    }
+
+                    Slider(
+                        value: Binding(
+                            get: { Double(jail.dailyBudgetMinutes) },
+                            set: { jail.dailyBudgetMinutes = Int($0) }
+                        ),
+                        in: budgetRange,
+                        step: Double(TapJailConstants.DeviceActivity.budgetStepMinutes)
+                    )
+                    .tint(TapJailColor.green)
+                    .accessibilityLabel("Daily app budget")
+                    .accessibilityValue(durationText(jail.dailyBudgetMinutes))
+
+                    HStack {
+                        Text("15 min")
+                        Spacer()
+                        Text("4 hr")
+                    }
+                    .font(.tapJail(12, weight: .light))
+                    .foregroundStyle(TapJailColor.muted)
+
+                    Text("Usage is shared across selected apps and resets at midnight.")
+                        .font(.tapJail(14, weight: .light))
+                        .foregroundStyle(TapJailColor.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .homePanel()
+
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Blocked apps")
+                        .font(.tapJail(17, weight: .bold))
+                        .foregroundStyle(TapJailColor.white)
+
+                    Text(jail.selectionSummary)
+                        .font(.tapJail(14, weight: .light))
+                        .foregroundStyle(TapJailColor.muted)
+
+                    Button {
+                        chooseApps()
+                    } label: {
+                        Label("Choose Apps", systemImage: "app.badge.checkmark")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(TapJailSecondaryButtonStyle())
+                }
+                .homePanel()
+
+                Button {
+                    jail.startDailyBudget()
+                    if jail.errorMessage == nil {
+                        dismiss()
+                    }
+                } label: {
+                    Text(jail.isBudgetMonitoring ? "Update Daily Budget" : "Start Daily Budget")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(TapJailPrimaryButtonStyle())
+                .disabled(!hasScreenTimeAuthorization || !jail.hasSelection)
+
+                if !hasScreenTimeAuthorization {
+                    Button {
+                        Task { await jail.requestAuthorization() }
+                    } label: {
+                        Text("Authorize Screen Time")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(TapJailSecondaryButtonStyle())
+                }
+            }
             .padding(20)
+        }
+        .background(TapJailColor.black)
+        .navigationTitle("Budget & Apps")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Done") { dismiss() }
+                    .foregroundStyle(TapJailColor.green)
+            }
+        }
+    }
+
+    private var budgetRange: ClosedRange<Double> {
+        let minimum = Double(TapJailConstants.DeviceActivity.minimumBudgetMinutes)
+        let maximum = Double(TapJailConstants.DeviceActivity.maximumBudgetMinutes)
+        return minimum...maximum
+    }
+
+    private var hasScreenTimeAuthorization: Bool {
+        switch jail.authorizationStatus {
+        case .approved, .approvedWithDataAccess:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+private struct UsageView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var jail: JailController
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(jail.isLockActive ? "Budget reached" : budgetStatusTitle)
+                        .font(.tapJail(34, weight: .bold))
+                        .foregroundStyle(TapJailColor.white)
+
+                    Text(usageExplanation)
+                        .font(.tapJail(15, weight: .light))
+                        .foregroundStyle(TapJailColor.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                VStack(spacing: 0) {
+                    usageStat(title: "Daily budget", value: durationText(jail.dailyBudgetMinutes))
+                    Divider().overlay(TapJailColor.divider)
+                    usageStat(title: "Selected", value: compactSelectionSummary)
+                    Divider().overlay(TapJailColor.divider)
+                    usageStat(title: "Next breakout", value: "\(jail.tapTarget) taps")
+                }
+                .homePanel()
+
+                Label(
+                    "Exact live usage requires TapJail's Screen Time report extension. This screen currently shows the verified budget status from iOS.",
+                    systemImage: "info.circle"
+                )
+                .font(.tapJail(14, weight: .light))
+                .foregroundStyle(TapJailColor.muted)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(20)
+        }
+        .background(TapJailColor.black)
+        .navigationTitle("Usage")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Done") { dismiss() }
+                    .foregroundStyle(TapJailColor.green)
+            }
+        }
+    }
+
+    private func usageStat(title: String, value: String) -> some View {
+        HStack {
+            Text(title)
+                .foregroundStyle(TapJailColor.muted)
+            Spacer()
+            Text(value)
+                .foregroundStyle(TapJailColor.white)
+                .multilineTextAlignment(.trailing)
+        }
+        .font(.tapJail(16, weight: .regular))
+        .padding(.vertical, 15)
+    }
+
+    private var budgetStatusTitle: String {
+        jail.isBudgetMonitoring ? "Budget active" : "No budget yet"
+    }
+
+    private var usageExplanation: String {
+        if jail.isLockActive {
+            return "Selected apps are shielded until you complete the breakout."
+        }
+        if jail.isBudgetMonitoring {
+            return "iOS is monitoring your selected apps against today's allowance."
+        }
+        return "Set a daily allowance to begin monitoring selected apps."
+    }
+
+    private var compactSelectionSummary: String {
+        jail.hasSelection ? jail.selectionSummary : "No apps"
+    }
+}
+
+private struct SettingsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var jail: JailController
+    @Binding var route: AppRoute
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                VStack(spacing: 0) {
+                    settingsRow(
+                        title: "Screen Time",
+                        value: authorizationStatusText,
+                        color: hasScreenTimeAuthorization ? TapJailColor.green : TapJailColor.red
+                    )
+                    Divider().overlay(TapJailColor.divider)
+                    settingsRow(
+                        title: "Daily reset",
+                        value: "Midnight",
+                        color: TapJailColor.white
+                    )
+                }
+                .homePanel()
+
+                if !hasScreenTimeAuthorization {
+                    Button {
+                        Task { await jail.requestAuthorization() }
+                    } label: {
+                        Text("Authorize Screen Time")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(TapJailPrimaryButtonStyle())
+                }
+
+#if DEBUG
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Developer Testing")
+                        .font(.tapJail(14, weight: .bold))
+                        .foregroundStyle(TapJailColor.muted)
+
+                    Button {
+                        jail.startDailyBudget(minutes: 1)
+                        dismiss()
+                    } label: {
+                        Text("Start 1-Minute Device Test")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(TapJailSecondaryButtonStyle())
+                    .disabled(!hasScreenTimeAuthorization || !jail.hasSelection)
+
+                    Button {
+                        jail.lockNow()
+                        dismiss()
+                    } label: {
+                        Text("Lock Now")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(TapJailSecondaryButtonStyle())
+                    .disabled(!hasScreenTimeAuthorization || !jail.hasSelection)
+
+                    if jail.isLockActive {
+                        Button {
+                            route = .prison
+                            dismiss()
+                        } label: {
+                            Text("Enter TapJail")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(TapJailSecondaryButtonStyle())
+                    }
+
+                    if jail.isBudgetMonitoring {
+                        Button {
+                            jail.stopDailyBudget()
+                        } label: {
+                            Text("Stop Budget Test")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(TapJailDestructiveButtonStyle())
+                    }
+                }
+                .homePanel()
+#endif
+            }
+            .padding(20)
+        }
+        .background(TapJailColor.black)
+        .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Done") { dismiss() }
+                    .foregroundStyle(TapJailColor.green)
+            }
+        }
+    }
+
+    private func settingsRow(title: String, value: String, color: Color) -> some View {
+        HStack {
+            Text(title)
+                .foregroundStyle(TapJailColor.white)
+            Spacer()
+            Text(value)
+                .foregroundStyle(color)
+        }
+        .font(.tapJail(16, weight: .regular))
+        .padding(.vertical, 15)
+    }
+
+    private var hasScreenTimeAuthorization: Bool {
+        switch jail.authorizationStatus {
+        case .approved, .approvedWithDataAccess:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private var authorizationStatusText: String {
+        hasScreenTimeAuthorization ? "Connected" : "Not connected"
+    }
+}
+
+private struct BudgetProgressBar: View {
+    let progress: Double
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(TapJailColor.raised)
+
+                Capsule()
+                    .fill(progress >= 1 ? TapJailColor.red : TapJailColor.green)
+                    .frame(width: max(progress > 0 ? 8 : 0, proxy.size.width * progress))
+            }
+        }
+        .frame(height: 8)
+        .accessibilityLabel("Budget progress")
+        .accessibilityValue(progress >= 1 ? "Budget reached" : "Budget active")
+    }
+}
+
+private extension View {
+    func homePanel() -> some View {
+        self
+            .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(TapJailColor.surface)
             .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(TapJailColor.divider, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(TapJailColor.divider.opacity(0.7), lineWidth: 1)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
+}
+
+private func durationText(_ minutes: Int) -> String {
+    let hours = minutes / 60
+    let remainingMinutes = minutes % 60
+
+    if hours == 0 {
+        return "\(remainingMinutes) min"
+    }
+    if remainingMinutes == 0 {
+        return "\(hours) hr"
+    }
+    return "\(hours) hr \(remainingMinutes) min"
 }
 
 struct TapJailPrimaryButtonStyle: ButtonStyle {
@@ -277,6 +738,7 @@ struct TapJailSecondaryButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(TapJailColor.divider, lineWidth: 1)
             )
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.easeInOut(duration: 0.08), value: configuration.isPressed)
     }
@@ -293,7 +755,17 @@ struct TapJailDestructiveButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(TapJailColor.red.opacity(0.65), lineWidth: 1)
             )
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.easeInOut(duration: 0.08), value: configuration.isPressed)
+    }
+}
+
+private struct TapJailRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .opacity(configuration.isPressed ? 0.82 : 1)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }

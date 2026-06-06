@@ -12,6 +12,8 @@ final class JailController: ObservableObject {
     @Published var errorMessage: String?
     @Published var dailyBudgetMinutes = 60
     @Published var isBudgetMonitoring = false
+    @Published var hasSeenOnboarding = false
+    @Published private(set) var budgetStartedAt: Date?
 
     @Published private(set) var tapTarget = 100
 
@@ -28,6 +30,7 @@ final class JailController: ObservableObject {
            debugTarget > 0 {
             tapTarget = debugTarget
             loadState()
+            migrateOnboardingGraceDayIfNeeded()
             return
         }
 #endif
@@ -36,6 +39,7 @@ final class JailController: ObservableObject {
         tapTarget = savedTarget > 0 ? savedTarget : 100
         defaults?.set(tapTarget, forKey: TapJailConstants.StorageKey.tapTarget)
         loadState()
+        migrateOnboardingGraceDayIfNeeded()
     }
 
     var hasSelection: Bool {
@@ -143,7 +147,12 @@ final class JailController: ObservableObject {
             intervalEnd: DateComponents(hour: 23, minute: 59, second: 59),
             repeats: true
         )
-        let event = makeEvent(minutes: thresholdMinutes, includesPastActivity: true)
+        let usesOnboardingGrace = isOnboardingGraceDay
+        let event = makeEvent(
+            minutes: thresholdMinutes,
+            includesPastActivity: !usesOnboardingGrace
+        )
+        let budgetStartedAt = Date()
 
         do {
             activityCenter.stopMonitoring([
@@ -163,6 +172,15 @@ final class JailController: ObservableObject {
                     forKey: TapJailConstants.StorageKey.dailyBudgetMinutes
                 )
             }
+            defaults?.set(
+                thresholdMinutes,
+                forKey: TapJailConstants.StorageKey.activeBudgetMinutes
+            )
+            defaults?.set(
+                budgetStartedAt,
+                forKey: TapJailConstants.StorageKey.budgetStartedAt
+            )
+            self.budgetStartedAt = budgetStartedAt
             defaults?.set(true, forKey: TapJailConstants.StorageKey.isBudgetMonitoring)
             defaults?.set(false, forKey: TapJailConstants.StorageKey.isLockActive)
             defaults?.set(false, forKey: TapJailConstants.StorageKey.budgetThresholdReached)
@@ -191,6 +209,9 @@ final class JailController: ObservableObject {
             TapJailConstants.DeviceActivity.extensionBudget
         ])
         defaults?.set(false, forKey: TapJailConstants.StorageKey.isBudgetMonitoring)
+        defaults?.removeObject(forKey: TapJailConstants.StorageKey.activeBudgetMinutes)
+        defaults?.removeObject(forKey: TapJailConstants.StorageKey.budgetStartedAt)
+        budgetStartedAt = nil
         defaults?.set(false, forKey: TapJailConstants.StorageKey.budgetThresholdReached)
         defaults?.set(
             TapJailConstants.DeviceActivity.extensionMinutes,
@@ -234,6 +255,16 @@ final class JailController: ObservableObject {
         ) ?? false
     }
 
+    func completeOnboarding() {
+        let completedAt = Date()
+        defaults?.set(true, forKey: TapJailConstants.StorageKey.hasSeenOnboarding)
+        defaults?.set(
+            completedAt,
+            forKey: TapJailConstants.StorageKey.onboardingCompletedAt
+        )
+        hasSeenOnboarding = true
+    }
+
     private func loadState() {
         if let data = defaults?.data(forKey: TapJailConstants.StorageKey.selectedActivitySelection),
            let savedSelection = try? decoder.decode(FamilyActivitySelection.self, from: data) {
@@ -241,6 +272,7 @@ final class JailController: ObservableObject {
         }
 
         isLockActive = defaults?.bool(forKey: TapJailConstants.StorageKey.isLockActive) ?? false
+        hasSeenOnboarding = defaults?.bool(forKey: TapJailConstants.StorageKey.hasSeenOnboarding) ?? false
         let savedBudget = defaults?.integer(
             forKey: TapJailConstants.StorageKey.dailyBudgetMinutes
         ) ?? 0
@@ -250,6 +282,39 @@ final class JailController: ObservableObject {
         isBudgetMonitoring = defaults?.bool(
             forKey: TapJailConstants.StorageKey.isBudgetMonitoring
         ) ?? false
+        budgetStartedAt = defaults?.object(
+            forKey: TapJailConstants.StorageKey.budgetStartedAt
+        ) as? Date
+    }
+
+    private var isOnboardingGraceDay: Bool {
+        guard let completedAt = defaults?.object(
+            forKey: TapJailConstants.StorageKey.onboardingCompletedAt
+        ) as? Date else {
+            return false
+        }
+
+        return Calendar.current.isDate(completedAt, inSameDayAs: Date())
+    }
+
+    private func migrateOnboardingGraceDayIfNeeded() {
+        guard hasSeenOnboarding,
+              defaults?.object(
+                forKey: TapJailConstants.StorageKey.onboardingCompletedAt
+              ) as? Date == nil else {
+            return
+        }
+
+        let migratedAt = Date()
+        defaults?.set(
+            migratedAt,
+            forKey: TapJailConstants.StorageKey.onboardingCompletedAt
+        )
+
+        // Existing development installs get one clean onboarding-day baseline.
+        if isBudgetMonitoring, hasSelection {
+            startDailyBudget()
+        }
     }
 
     private func applyShield(selection: FamilyActivitySelection) {

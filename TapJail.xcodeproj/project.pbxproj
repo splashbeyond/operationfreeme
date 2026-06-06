@@ -13,6 +13,7 @@
 		100000000000000000000004 /* LockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000104 /* LockView.swift */; };
 		100000000000000000000005 /* TapPrisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000105 /* TapPrisonView.swift */; };
 		100000000000000000000006 /* TapJailConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000106 /* TapJailConstants.swift */; };
+		100000000000000000000021 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000123 /* OnboardingView.swift */; };
 		100000000000000000000007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000107 /* Assets.xcassets */; };
 		100000000000000000000008 /* ShieldConfigurationExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000108 /* ShieldConfigurationExtension.swift */; };
 		100000000000000000000009 /* ShieldActionExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000109 /* ShieldActionExtension.swift */; };
@@ -39,6 +40,8 @@
 		10000000000000000000001E /* DeviceActivityMonitor.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 100000000000000000000204 /* DeviceActivityMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		10000000000000000000001F /* TapJailConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000106 /* TapJailConstants.swift */; };
 		100000000000000000000020 /* TapJailConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000106 /* TapJailConstants.swift */; };
+		100000000000000000000D01 /* DeviceActivityReportExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000D11 /* DeviceActivityReportExtension.swift */; };
+		100000000000000000000D02 /* DeviceActivityReport.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 100000000000000000000D14 /* DeviceActivityReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,6 +66,13 @@
 			remoteGlobalIDString = 100000000000000000000504;
 			remoteInfo = DeviceActivityMonitor;
 		};
+		100000000000000000000D21 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 100000000000000000000401 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 100000000000000000000D51;
+			remoteInfo = DeviceActivityReport;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -75,6 +85,7 @@
 				10000000000000000000000A /* ShieldConfiguration.appex in Embed App Extensions */,
 				10000000000000000000000B /* ShieldAction.appex in Embed App Extensions */,
 				10000000000000000000001E /* DeviceActivityMonitor.appex in Embed App Extensions */,
+				100000000000000000000D02 /* DeviceActivityReport.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -87,6 +98,7 @@
 		100000000000000000000103 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		100000000000000000000104 /* LockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockView.swift; sourceTree = "<group>"; };
 		100000000000000000000105 /* TapPrisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapPrisonView.swift; sourceTree = "<group>"; };
+		100000000000000000000123 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		100000000000000000000106 /* TapJailConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapJailConstants.swift; sourceTree = "<group>"; };
 		100000000000000000000107 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		100000000000000000000108 /* ShieldConfigurationExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldConfigurationExtension.swift; sourceTree = "<group>"; };
@@ -120,6 +132,10 @@
 		100000000000000000000202 /* ShieldConfiguration.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		100000000000000000000203 /* ShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		100000000000000000000204 /* DeviceActivityMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DeviceActivityMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		100000000000000000000D11 /* DeviceActivityReportExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceActivityReportExtension.swift; sourceTree = "<group>"; };
+		100000000000000000000D12 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		100000000000000000000D13 /* DeviceActivityReport.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DeviceActivityReport.entitlements; sourceTree = "<group>"; };
+		100000000000000000000D14 /* DeviceActivityReport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DeviceActivityReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -151,6 +167,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		100000000000000000000D31 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -161,6 +184,7 @@
 				100000000000000000000806 /* ShieldConfiguration */,
 				100000000000000000000807 /* ShieldAction */,
 				10000000000000000000080A /* DeviceActivityMonitor */,
+				100000000000000000000D41 /* DeviceActivityReport */,
 				100000000000000000000808 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -185,6 +209,7 @@
 				100000000000000000000103 /* RootView.swift */,
 				100000000000000000000104 /* LockView.swift */,
 				100000000000000000000105 /* TapPrisonView.swift */,
+				100000000000000000000123 /* OnboardingView.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -259,6 +284,16 @@
 			path = DeviceActivityMonitor;
 			sourceTree = "<group>";
 		};
+		100000000000000000000D41 /* DeviceActivityReport */ = {
+			isa = PBXGroup;
+			children = (
+				100000000000000000000D11 /* DeviceActivityReportExtension.swift */,
+				100000000000000000000D12 /* Info.plist */,
+				100000000000000000000D13 /* DeviceActivityReport.entitlements */,
+			);
+			path = DeviceActivityReport;
+			sourceTree = "<group>";
+		};
 		100000000000000000000808 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -266,6 +301,7 @@
 				100000000000000000000202 /* ShieldConfiguration.appex */,
 				100000000000000000000203 /* ShieldAction.appex */,
 				100000000000000000000204 /* DeviceActivityMonitor.appex */,
+				100000000000000000000D14 /* DeviceActivityReport.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -288,6 +324,7 @@
 				100000000000000000000B01 /* PBXTargetDependency */,
 				100000000000000000000B02 /* PBXTargetDependency */,
 				100000000000000000000B03 /* PBXTargetDependency */,
+				100000000000000000000D81 /* PBXTargetDependency */,
 			);
 			name = TapJail;
 			productName = TapJail;
@@ -345,6 +382,23 @@
 			productReference = 100000000000000000000204 /* DeviceActivityMonitor.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		100000000000000000000D51 /* DeviceActivityReport */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 100000000000000000000D91 /* Build configuration list for PBXNativeTarget "DeviceActivityReport" */;
+			buildPhases = (
+				100000000000000000000D61 /* Sources */,
+				100000000000000000000D31 /* Frameworks */,
+				100000000000000000000D62 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DeviceActivityReport;
+			productName = DeviceActivityReport;
+			productReference = 100000000000000000000D14 /* DeviceActivityReport.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -371,6 +425,10 @@
 						CreatedOnToolsVersion = 26.5;
 						ProvisioningStyle = Automatic;
 					};
+					100000000000000000000D51 = {
+						CreatedOnToolsVersion = 26.5;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 100000000000000000000904 /* Build configuration list for PBXProject "TapJail" */;
@@ -390,6 +448,7 @@
 				100000000000000000000502 /* ShieldConfiguration */,
 				100000000000000000000503 /* ShieldAction */,
 				100000000000000000000504 /* DeviceActivityMonitor */,
+				100000000000000000000D51 /* DeviceActivityReport */,
 			);
 		};
 /* End PBXProject section */
@@ -440,6 +499,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		100000000000000000000D62 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -453,6 +519,7 @@
 				100000000000000000000004 /* LockView.swift in Sources */,
 				100000000000000000000005 /* TapPrisonView.swift in Sources */,
 				100000000000000000000006 /* TapJailConstants.swift in Sources */,
+				100000000000000000000021 /* OnboardingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -483,6 +550,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		100000000000000000000D61 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				100000000000000000000D01 /* DeviceActivityReportExtension.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -500,6 +575,11 @@
 			isa = PBXTargetDependency;
 			target = 100000000000000000000504 /* DeviceActivityMonitor */;
 			targetProxy = 100000000000000000000303 /* PBXContainerItemProxy */;
+		};
+		100000000000000000000D81 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 100000000000000000000D51 /* DeviceActivityReport */;
+			targetProxy = 100000000000000000000D21 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -823,6 +903,56 @@
 			};
 			name = Release;
 		};
+		100000000000000000000DC1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = DeviceActivityReport/DeviceActivityReport.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28D2M73B26;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DeviceActivityReport/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.piperstudio.tapjail.DeviceActivityReport;
+				PRODUCT_NAME = DeviceActivityReport;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		100000000000000000000DC2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = DeviceActivityReport/DeviceActivityReport.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28D2M73B26;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DeviceActivityReport/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.piperstudio.tapjail.DeviceActivityReport;
+				PRODUCT_NAME = DeviceActivityReport;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -867,6 +997,15 @@
 			buildConfigurations = (
 				100000000000000000000C09 /* Debug */,
 				100000000000000000000C0A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		100000000000000000000D91 /* Build configuration list for PBXNativeTarget "DeviceActivityReport" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				100000000000000000000DC1 /* Debug */,
+				100000000000000000000DC2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

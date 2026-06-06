@@ -20,7 +20,9 @@ struct TapJailApp: App {
                     }
                 }
                 .onAppear {
-                    if jail.isLockActive || ProcessInfo.processInfo.arguments.contains("-tapjail-prison") {
+                    if !jail.hasSeenOnboarding {
+                        route = .onboarding
+                    } else if jail.isLockActive || ProcessInfo.processInfo.arguments.contains("-tapjail-prison") {
                         route = .prison
                     }
                 }
@@ -32,6 +34,7 @@ struct TapJailApp: App {
 }
 
 enum AppRoute {
+    case onboarding
     case lock
     case prison
 }

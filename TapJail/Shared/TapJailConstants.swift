@@ -64,12 +64,16 @@ enum TapJailConstants {
         static let tapTarget = "tapTarget"
         static let sessionStartedAt = "sessionStartedAt"
         static let dailyBudgetMinutes = "dailyBudgetMinutes"
+        static let activeBudgetMinutes = "activeBudgetMinutes"
+        static let budgetStartedAt = "budgetStartedAt"
         static let isBudgetMonitoring = "isBudgetMonitoring"
         static let budgetDayIdentifier = "budgetDayIdentifier"
         static let budgetThresholdReached = "budgetThresholdReached"
         static let budgetThresholdReachedAt = "budgetThresholdReachedAt"
         static let breakoutStage = "breakoutStage"
         static let extensionMinutes = "extensionMinutes"
+        static let hasSeenOnboarding = "hasSeenOnboarding"
+        static let onboardingCompletedAt = "onboardingCompletedAt"
     }
 
     static func localDayIdentifier(for date: Date = Date()) -> String {

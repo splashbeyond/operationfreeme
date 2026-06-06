@@ -10,6 +10,8 @@ struct RootView: View {
             TapJailColor.black.ignoresSafeArea()
 
             switch route {
+            case .onboarding:
+                OnboardingView(route: $route)
             case .lock:
                 LockView(route: $route)
             case .prison:
@@ -17,7 +19,7 @@ struct RootView: View {
             }
         }
         .onChange(of: jail.isLockActive) { _, isActive in
-            if isActive {
+            if isActive && route != .onboarding {
                 route = .prison
             }
         }
