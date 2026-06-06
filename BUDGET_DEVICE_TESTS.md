@@ -167,6 +167,8 @@ Repeat a clean budget activation with representative slider values:
 | 60 minutes | 60 minutes cumulative usage | 15 minutes |
 | 120 minutes | 120 minutes cumulative usage | 15 minutes |
 | 240 minutes | 240 minutes cumulative usage | 15 minutes |
+| 360 minutes | 360 minutes cumulative usage | 15 minutes |
+| 480 minutes | 480 minutes cumulative usage | 15 minutes |
 
 For each value:
 
@@ -178,7 +180,11 @@ For each value:
 6. Complete 100 taps.
 7. Confirm the notification grants 15 more minutes and names the next tap requirement.
 
-All intermediate slider values use the same scheduling path in 15-minute increments.
+All intermediate slider values from 15 minutes through 8 hours use the same
+scheduling path in 15-minute increments.
+
+If the selected budget cannot be fully consumed before midnight, the day resets
+before that initial threshold can be reached.
 
 ## Test 12: Replacing An Active Budget
 

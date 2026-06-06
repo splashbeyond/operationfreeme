@@ -12,7 +12,7 @@ enum TapJailConstants {
         static let extensionBudget = DeviceActivityName("tapjail.extension-budget")
         static let extensionMinutes = 15
         static let minimumBudgetMinutes = 15
-        static let maximumBudgetMinutes = 240
+        static let maximumBudgetMinutes = 480
         static let budgetStepMinutes = 15
 
         static var supportedBudgetMinutes: [Int] {

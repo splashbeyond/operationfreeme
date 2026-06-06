@@ -384,7 +384,7 @@ private struct BudgetEditorView: View {
                     HStack {
                         Text("15 min")
                         Spacer()
-                        Text("4 hr")
+                        Text("8 hr")
                     }
                     .font(.tapJail(12, weight: .light))
                     .foregroundStyle(TapJailColor.muted)

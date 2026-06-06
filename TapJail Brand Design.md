@@ -142,7 +142,7 @@ Panel specification:
 ### Daily Budget
 
 - Shared across every selected app, category, and web domain.
-- Slider range: 15 minutes to 4 hours.
+- Slider range: 15 minutes to 8 hours.
 - Increment: 15 minutes.
 - Slider and selected value use action green.
 - Budget resets at local midnight.
