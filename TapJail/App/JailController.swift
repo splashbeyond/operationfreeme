@@ -71,22 +71,23 @@ final class JailController: ObservableObject {
         pendingBudgetMinutes != nil || pendingSelection != nil
     }
 
-    var correctionWindowAvailable: Bool {
+    var bonusBudgetChangeAvailable: Bool {
         guard isBudgetMonitoring,
               defaults?.bool(
                 forKey: TapJailConstants.StorageKey.isLockActive
               ) != true,
-              !budgetWasReachedToday,
-              let committedAt = defaults?.object(
-                forKey: TapJailConstants.StorageKey.budgetCommittedAt
-              ) as? Date,
-              Calendar.current.isDate(committedAt, inSameDayAs: Date()),
-              Date().timeIntervalSince(committedAt) < 10 * 60 else {
+              !budgetWasReachedToday else {
             return false
         }
 
-        return defaults?.string(
-            forKey: TapJailConstants.StorageKey.correctionUsedDayIdentifier
+        return defaults?.bool(
+            forKey: TapJailConstants.StorageKey.bonusBudgetChangeAvailable
+        ) == true
+    }
+
+    var canScheduleBudgetChangeToday: Bool {
+        defaults?.string(
+            forKey: TapJailConstants.StorageKey.budgetChangeUsedDayIdentifier
         ) != TapJailConstants.localDayIdentifier()
     }
 
@@ -101,14 +102,18 @@ final class JailController: ObservableObject {
 
     var budgetEditorMessage: String {
         guard isBudgetMonitoring else {
-            return "Your budget starts when you tap Start Daily Budget."
+            return "Choose how much time you can use these apps each day."
         }
 
-        if correctionWindowAvailable {
-            return "You have one setup correction for 10 minutes. After that, changes begin at midnight."
+        if bonusBudgetChangeAvailable {
+            return "You can change your limit one more time today. After that, your next change starts tomorrow."
         }
 
-        return "Today's budget is locked. Changes begin at midnight."
+        if canScheduleBudgetChangeToday {
+            return "You can change your limit once today. The new limit will start tomorrow."
+        }
+
+        return "You already changed your limit today. You can change it again tomorrow."
     }
 
     private func selectionSummary(for selection: FamilyActivitySelection) -> String {
@@ -197,17 +202,23 @@ final class JailController: ObservableObject {
             return errorMessage == nil
         }
 
-        if correctionWindowAvailable {
+        if bonusBudgetChangeAvailable {
             selection = selectionDraft
             dailyBudgetMinutes = normalizedMinutes
             startDailyBudget()
             if errorMessage == nil {
+                defaults?.set(false, forKey: TapJailConstants.StorageKey.bonusBudgetChangeAvailable)
                 defaults?.set(
                     TapJailConstants.localDayIdentifier(),
-                    forKey: TapJailConstants.StorageKey.correctionUsedDayIdentifier
+                    forKey: TapJailConstants.StorageKey.budgetChangeUsedDayIdentifier
                 )
             }
             return errorMessage == nil
+        }
+
+        guard canScheduleBudgetChangeToday else {
+            errorMessage = "You already changed your limit today. Try again tomorrow."
+            return false
         }
 
         do {
@@ -222,6 +233,10 @@ final class JailController: ObservableObject {
             )
             pendingBudgetMinutes = normalizedMinutes
             pendingSelection = selectionDraft
+            defaults?.set(
+                TapJailConstants.localDayIdentifier(),
+                forKey: TapJailConstants.StorageKey.budgetChangeUsedDayIdentifier
+            )
             errorMessage = nil
             return true
         } catch {
@@ -362,6 +377,12 @@ final class JailController: ObservableObject {
                 defaults?.removeObject(
                     forKey: TapJailConstants.StorageKey.correctionUsedDayIdentifier
                 )
+                if !isDebugTest {
+                    defaults?.set(
+                        true,
+                        forKey: TapJailConstants.StorageKey.bonusBudgetChangeAvailable
+                    )
+                }
             }
             writeReportConfiguration(
                 budgetMinutes: thresholdMinutes,
@@ -405,6 +426,8 @@ final class JailController: ObservableObject {
         defaults?.removeObject(forKey: TapJailConstants.StorageKey.budgetStartedAt)
         defaults?.removeObject(forKey: TapJailConstants.StorageKey.budgetCommittedAt)
         defaults?.removeObject(forKey: TapJailConstants.StorageKey.correctionUsedDayIdentifier)
+        defaults?.removeObject(forKey: TapJailConstants.StorageKey.bonusBudgetChangeAvailable)
+        defaults?.removeObject(forKey: TapJailConstants.StorageKey.budgetChangeUsedDayIdentifier)
         defaults?.removeObject(forKey: TapJailConstants.StorageKey.pendingBudgetMinutes)
         defaults?.removeObject(forKey: TapJailConstants.StorageKey.pendingActivitySelection)
         removeReportConfiguration()

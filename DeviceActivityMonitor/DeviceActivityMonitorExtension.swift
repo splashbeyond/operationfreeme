@@ -194,5 +194,6 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults?.removeObject(forKey: TapJailConstants.StorageKey.pendingActivitySelection)
         defaults?.removeObject(forKey: TapJailConstants.StorageKey.budgetCommittedAt)
         defaults?.removeObject(forKey: TapJailConstants.StorageKey.correctionUsedDayIdentifier)
+        defaults?.set(false, forKey: TapJailConstants.StorageKey.bonusBudgetChangeAvailable)
     }
 }

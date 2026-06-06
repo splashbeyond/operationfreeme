@@ -18,7 +18,7 @@ struct LockView: View {
                 VStack(spacing: 12) {
                     navigationRow(
                         icon: "slider.horizontal.3",
-                        title: "Budget & Apps",
+                        title: "Limit & Apps",
                         detail: budgetAndAppsDetail
                     ) {
                         jail.beginBudgetEditing()
@@ -126,7 +126,7 @@ struct LockView: View {
     private var budgetHero: some View {
         VStack(alignment: .leading, spacing: 22) {
             HStack {
-                Label("TODAY'S BUDGET", systemImage: "hourglass")
+                Label("TODAY'S APP LIMIT", systemImage: "hourglass")
                     .font(.tapJail(12, weight: .bold))
                     .foregroundStyle(TapJailColor.muted)
                     .tracking(1.2)
@@ -154,7 +154,7 @@ struct LockView: View {
                     jail.beginBudgetEditing()
                     presentedSheet = .budget
                 } label: {
-                    Text(jail.hasSelection ? "Start Daily Budget" : "Set Your Daily Budget")
+                    Text(jail.hasSelection ? "Start Daily App Limit" : "Set Your App Limit")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(TapJailPrimaryButtonStyle())
@@ -307,6 +307,7 @@ private enum HomeSheet: String, Identifiable {
 private struct BudgetEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var jail: JailController
+    @State private var isChangeConfirmationPresented = false
     let chooseApps: () -> Void
 
     var body: some View {
@@ -314,7 +315,7 @@ private struct BudgetEditorView: View {
             VStack(alignment: .leading, spacing: 22) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text("Daily allowance")
+                        Text("Daily app limit")
                             .font(.tapJail(17, weight: .bold))
                             .foregroundStyle(TapJailColor.white)
 
@@ -335,7 +336,7 @@ private struct BudgetEditorView: View {
                         step: Double(TapJailConstants.DeviceActivity.budgetStepMinutes)
                     )
                     .tint(TapJailColor.green)
-                    .accessibilityLabel("Daily app budget")
+                    .accessibilityLabel("Daily app limit")
                     .accessibilityValue(durationText(jail.budgetDraftMinutes))
 
                     HStack {
@@ -373,7 +374,9 @@ private struct BudgetEditorView: View {
                 .homePanel()
 
                 Button {
-                    if jail.commitBudgetDraft() {
+                    if jail.isBudgetMonitoring {
+                        isChangeConfirmationPresented = true
+                    } else if jail.commitBudgetDraft() {
                         dismiss()
                     }
                 } label: {
@@ -381,7 +384,22 @@ private struct BudgetEditorView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(TapJailPrimaryButtonStyle())
-                .disabled(!hasScreenTimeAuthorization || !jail.hasDraftSelection)
+                .disabled(
+                    !hasScreenTimeAuthorization
+                        || !jail.hasDraftSelection
+                        || (!jail.bonusBudgetChangeAvailable
+                            && !jail.canScheduleBudgetChangeToday
+                            && jail.isBudgetMonitoring)
+                )
+
+                if jail.isBudgetMonitoring {
+                    Text(changeRuleText)
+                        .font(.tapJail(13, weight: .light))
+                        .foregroundStyle(TapJailColor.muted)
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
                 if !hasScreenTimeAuthorization {
                     Button {
@@ -396,8 +414,22 @@ private struct BudgetEditorView: View {
             .padding(20)
         }
         .background(TapJailColor.black)
-        .navigationTitle("Budget & Apps")
+        .navigationTitle("Limit & Apps")
         .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog(
+            confirmationTitle,
+            isPresented: $isChangeConfirmationPresented,
+            titleVisibility: .visible
+        ) {
+            Button(confirmButtonTitle) {
+                if jail.commitBudgetDraft() {
+                    dismiss()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(confirmationMessage)
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Done") { dismiss() }
@@ -414,11 +446,40 @@ private struct BudgetEditorView: View {
 
     private var updateButtonTitle: String {
         if !jail.isBudgetMonitoring {
-            return "Start Daily Budget"
+            return "Set Daily App Limit"
         }
-        return jail.correctionWindowAvailable
-            ? "Use Setup Correction"
-            : "Schedule for Midnight"
+        return jail.bonusBudgetChangeAvailable
+            ? "Update Limit"
+            : "Set Tomorrow's Limit"
+    }
+
+    private var changeRuleText: String {
+        if jail.bonusBudgetChangeAvailable {
+            return "This is your one extra change after setup."
+        }
+        if jail.canScheduleBudgetChangeToday {
+            return "You can change your limit once per day. This change starts tomorrow."
+        }
+        return "You already used today's change."
+    }
+
+    private var confirmationTitle: String {
+        jail.bonusBudgetChangeAvailable
+            ? "Update today's limit?"
+            : "Set tomorrow's limit?"
+    }
+
+    private var confirmationMessage: String {
+        if jail.bonusBudgetChangeAvailable {
+            return "You get one extra change after setup. After this, today's limit cannot be changed again."
+        }
+        return "You can change your limit once per day. This new limit will start at midnight."
+    }
+
+    private var confirmButtonTitle: String {
+        jail.bonusBudgetChangeAvailable
+            ? "Update Today's Limit"
+            : "Set Tomorrow's Limit"
     }
 
     private var hasScreenTimeAuthorization: Bool {
@@ -501,9 +562,9 @@ private struct UsageView: View {
             return "Selected apps are shielded until you complete the breakout."
         }
         if jail.isBudgetMonitoring {
-            return "iOS is monitoring your selected apps against today's allowance."
+            return "iOS is watching your selected apps for today's limit."
         }
-        return "Set a daily allowance to begin monitoring selected apps."
+        return "Set a daily app limit to begin."
     }
 
     private var compactSelectionSummary: String {

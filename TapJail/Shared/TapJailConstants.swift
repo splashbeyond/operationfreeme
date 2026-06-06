@@ -76,6 +76,8 @@ enum TapJailConstants {
         static let isExtensionActive = "isExtensionActive"
         static let budgetCommittedAt = "budgetCommittedAt"
         static let correctionUsedDayIdentifier = "correctionUsedDayIdentifier"
+        static let bonusBudgetChangeAvailable = "bonusBudgetChangeAvailable"
+        static let budgetChangeUsedDayIdentifier = "budgetChangeUsedDayIdentifier"
         static let pendingBudgetMinutes = "pendingBudgetMinutes"
         static let pendingActivitySelection = "pendingActivitySelection"
         static let hasSeenOnboarding = "hasSeenOnboarding"
