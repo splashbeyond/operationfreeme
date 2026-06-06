@@ -80,4 +80,43 @@ enum TapJailConstants {
         let components = Calendar.current.dateComponents([.year, .month, .day], from: date)
         return "\(components.year ?? 0)-\(components.month ?? 0)-\(components.day ?? 0)"
     }
+
+    enum SharedFile {
+        static let shieldState = "TapJailShieldState.plist"
+
+        static func readTapTarget() -> Int {
+            guard let url = url(for: shieldState),
+                  let data = try? Data(contentsOf: url),
+                  let state = try? PropertyListSerialization.propertyList(
+                    from: data,
+                    options: [],
+                    format: nil
+                  ) as? [String: Any],
+                  let tapTarget = state["tapTarget"] as? Int,
+                  tapTarget > 0 else {
+                return 100
+            }
+
+            return tapTarget
+        }
+
+        static func writeTapTarget(_ tapTarget: Int) {
+            guard let url = url(for: shieldState),
+                  let data = try? PropertyListSerialization.data(
+                    fromPropertyList: ["tapTarget": tapTarget],
+                    format: .binary,
+                    options: 0
+                  ) else {
+                return
+            }
+
+            try? data.write(to: url, options: .atomic)
+        }
+
+        private static func url(for filename: String) -> URL? {
+            FileManager.default
+                .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?
+                .appendingPathComponent(filename)
+        }
+    }
 }

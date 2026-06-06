@@ -2,8 +2,6 @@ import ManagedSettings
 import UserNotifications
 
 final class ShieldActionExtension: ShieldActionDelegate {
-    private let defaults = UserDefaults(suiteName: TapJailConstants.appGroupID)
-
     override func handle(action: ShieldAction, for application: ApplicationToken, completionHandler: @escaping (ShieldActionResponse) -> Void) {
         handle(action: action, completionHandler: completionHandler)
     }
@@ -23,14 +21,18 @@ final class ShieldActionExtension: ShieldActionDelegate {
         case .secondaryButtonPressed:
             sendBreakoutNotification()
             completionHandler(.defer)
+        case .firstSecondarySubmenuItemPressed,
+             .secondSecondarySubmenuItemPressed,
+             .thirdSecondarySubmenuItemPressed:
+            sendBreakoutNotification()
+            completionHandler(.defer)
         @unknown default:
             completionHandler(.defer)
         }
     }
 
     private func sendBreakoutNotification() {
-        let savedTapTarget = defaults?.integer(forKey: TapJailConstants.StorageKey.tapTarget) ?? 0
-        let tapTarget = savedTapTarget > 0 ? savedTapTarget : 100
+        let tapTarget = TapJailConstants.SharedFile.readTapTarget()
 
         let content = UNMutableNotificationContent()
         content.title = "Tap to enter TapJail"

@@ -39,6 +39,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults?.set(Date(), forKey: TapJailConstants.StorageKey.budgetThresholdReachedAt)
         defaults?.set(stage, forKey: TapJailConstants.StorageKey.breakoutStage)
         defaults?.set(tapTarget, forKey: TapJailConstants.StorageKey.tapTarget)
+        TapJailConstants.SharedFile.writeTapTarget(tapTarget)
         sendThresholdNotification(tapTarget: tapTarget)
     }
 
@@ -66,6 +67,9 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults?.set(
             TapJailConstants.DeviceActivity.tapsRequired(for: 0),
             forKey: TapJailConstants.StorageKey.tapTarget
+        )
+        TapJailConstants.SharedFile.writeTapTarget(
+            TapJailConstants.DeviceActivity.tapsRequired(for: 0)
         )
     }
 

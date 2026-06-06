@@ -3,8 +3,6 @@ import ManagedSettingsUI
 import UIKit
 
 final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
-    private let defaults = UserDefaults(suiteName: TapJailConstants.appGroupID)
-
     override func configuration(shielding application: Application) -> ShieldConfiguration {
         configuration()
     }
@@ -22,8 +20,7 @@ final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     }
 
     private func configuration() -> ShieldConfiguration {
-        let savedTapTarget = defaults?.integer(forKey: TapJailConstants.StorageKey.tapTarget) ?? 0
-        let tapTarget = savedTapTarget > 0 ? savedTapTarget : 100
+        let tapTarget = TapJailConstants.SharedFile.readTapTarget()
 
         return ShieldConfiguration(
             backgroundBlurStyle: nil,

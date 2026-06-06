@@ -39,6 +39,7 @@ final class JailController: ObservableObject {
         let savedTarget = defaults?.integer(forKey: TapJailConstants.StorageKey.tapTarget) ?? 0
         tapTarget = savedTarget > 0 ? savedTarget : 100
         defaults?.set(tapTarget, forKey: TapJailConstants.StorageKey.tapTarget)
+        TapJailConstants.SharedFile.writeTapTarget(tapTarget)
         loadState()
         migrateOnboardingGraceDayIfNeeded()
         syncReportConfigurationIfNeeded()
@@ -100,6 +101,7 @@ final class JailController: ObservableObject {
         saveSelection()
         tapTarget = 100
         defaults?.set(100, forKey: TapJailConstants.StorageKey.tapTarget)
+        TapJailConstants.SharedFile.writeTapTarget(100)
         applyShield(selection: selection)
         defaults?.set(true, forKey: TapJailConstants.StorageKey.isLockActive)
         defaults?.set(Date(), forKey: TapJailConstants.StorageKey.sessionStartedAt)
@@ -212,6 +214,7 @@ final class JailController: ObservableObject {
             )
             defaults?.set(0, forKey: TapJailConstants.StorageKey.breakoutStage)
             defaults?.set(100, forKey: TapJailConstants.StorageKey.tapTarget)
+            TapJailConstants.SharedFile.writeTapTarget(100)
             defaults?.set(
                 extensionMinutes,
                 forKey: TapJailConstants.StorageKey.extensionMinutes
@@ -242,6 +245,7 @@ final class JailController: ObservableObject {
         )
         defaults?.set(0, forKey: TapJailConstants.StorageKey.breakoutStage)
         defaults?.set(100, forKey: TapJailConstants.StorageKey.tapTarget)
+        TapJailConstants.SharedFile.writeTapTarget(100)
         tapTarget = 100
         isBudgetMonitoring = false
         unlock()
@@ -273,6 +277,7 @@ final class JailController: ObservableObject {
         isLockActive = defaults?.bool(forKey: TapJailConstants.StorageKey.isLockActive) ?? false
         let savedTarget = defaults?.integer(forKey: TapJailConstants.StorageKey.tapTarget) ?? 0
         tapTarget = savedTarget > 0 ? savedTarget : 100
+        TapJailConstants.SharedFile.writeTapTarget(tapTarget)
         isBudgetMonitoring = defaults?.bool(
             forKey: TapJailConstants.StorageKey.isBudgetMonitoring
         ) ?? false
