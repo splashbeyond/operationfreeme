@@ -73,6 +73,7 @@ enum TapJailConstants {
         static let budgetThresholdReachedAt = "budgetThresholdReachedAt"
         static let breakoutStage = "breakoutStage"
         static let extensionMinutes = "extensionMinutes"
+        static let isExtensionActive = "isExtensionActive"
         static let hasSeenOnboarding = "hasSeenOnboarding"
         static let onboardingCompletedAt = "onboardingCompletedAt"
     }

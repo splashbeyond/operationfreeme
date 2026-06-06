@@ -14,6 +14,8 @@ final class JailController: ObservableObject {
     @Published var isBudgetMonitoring = false
     @Published var hasSeenOnboarding = false
     @Published private(set) var budgetStartedAt: Date?
+    @Published private(set) var breakoutStage = 0
+    @Published private(set) var isExtensionActive = false
 
     @Published private(set) var tapTarget = 100
 
@@ -75,6 +77,14 @@ final class JailController: ObservableObject {
         return Calendar.current.isDate(completedAt, inSameDayAs: Date())
     }
 
+    var activeExtensionMinutes: Int {
+        savedExtensionMinutes
+    }
+
+    var nextTapTarget: Int {
+        TapJailConstants.DeviceActivity.tapsRequired(for: breakoutStage + 1)
+    }
+
     func requestAuthorization() async {
         do {
             try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
@@ -134,6 +144,11 @@ final class JailController: ObservableObject {
                     false,
                     forKey: TapJailConstants.StorageKey.budgetThresholdReached
                 )
+                defaults?.set(
+                    true,
+                    forKey: TapJailConstants.StorageKey.isExtensionActive
+                )
+                isExtensionActive = true
                 sendExtensionGrantedNotification(
                     extensionMinutes: extensionMinutes,
                     nextTapTarget: nextTapTarget
@@ -142,6 +157,8 @@ final class JailController: ObservableObject {
         } else {
             unlock()
             defaults?.set(false, forKey: TapJailConstants.StorageKey.budgetThresholdReached)
+            defaults?.set(false, forKey: TapJailConstants.StorageKey.isExtensionActive)
+            isExtensionActive = false
             activityCenter.stopMonitoring([TapJailConstants.DeviceActivity.extensionBudget])
             sendUnlockedUntilMidnightNotification()
         }
@@ -222,6 +239,7 @@ final class JailController: ObservableObject {
                 forKey: TapJailConstants.StorageKey.budgetDayIdentifier
             )
             defaults?.set(0, forKey: TapJailConstants.StorageKey.breakoutStage)
+            defaults?.set(false, forKey: TapJailConstants.StorageKey.isExtensionActive)
             defaults?.set(100, forKey: TapJailConstants.StorageKey.tapTarget)
             TapJailConstants.SharedFile.writeTapTarget(100)
             defaults?.set(
@@ -229,6 +247,8 @@ final class JailController: ObservableObject {
                 forKey: TapJailConstants.StorageKey.extensionMinutes
             )
             tapTarget = 100
+            breakoutStage = 0
+            isExtensionActive = false
             isLockActive = false
             isBudgetMonitoring = true
             errorMessage = nil
@@ -254,9 +274,12 @@ final class JailController: ObservableObject {
             forKey: TapJailConstants.StorageKey.extensionMinutes
         )
         defaults?.set(0, forKey: TapJailConstants.StorageKey.breakoutStage)
+        defaults?.set(false, forKey: TapJailConstants.StorageKey.isExtensionActive)
         defaults?.set(100, forKey: TapJailConstants.StorageKey.tapTarget)
         TapJailConstants.SharedFile.writeTapTarget(100)
         tapTarget = 100
+        breakoutStage = 0
+        isExtensionActive = false
         isBudgetMonitoring = false
         unlock()
     }
@@ -291,6 +314,12 @@ final class JailController: ObservableObject {
         isBudgetMonitoring = defaults?.bool(
             forKey: TapJailConstants.StorageKey.isBudgetMonitoring
         ) ?? false
+        breakoutStage = defaults?.integer(
+            forKey: TapJailConstants.StorageKey.breakoutStage
+        ) ?? 0
+        isExtensionActive = defaults?.bool(
+            forKey: TapJailConstants.StorageKey.isExtensionActive
+        ) ?? false
     }
 
     func completeOnboarding() {
@@ -319,6 +348,12 @@ final class JailController: ObservableObject {
             : 60
         isBudgetMonitoring = defaults?.bool(
             forKey: TapJailConstants.StorageKey.isBudgetMonitoring
+        ) ?? false
+        breakoutStage = defaults?.integer(
+            forKey: TapJailConstants.StorageKey.breakoutStage
+        ) ?? 0
+        isExtensionActive = defaults?.bool(
+            forKey: TapJailConstants.StorageKey.isExtensionActive
         ) ?? false
         budgetStartedAt = defaults?.object(
             forKey: TapJailConstants.StorageKey.budgetStartedAt

@@ -20,6 +20,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         clearShield()
         defaults?.set(false, forKey: TapJailConstants.StorageKey.isLockActive)
         defaults?.set(false, forKey: TapJailConstants.StorageKey.budgetThresholdReached)
+        defaults?.set(false, forKey: TapJailConstants.StorageKey.isExtensionActive)
 
         if activity == TapJailConstants.DeviceActivity.activeSessionBudget {
             startRepeatingDailyBudget()
@@ -43,6 +44,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults?.set(true, forKey: TapJailConstants.StorageKey.budgetThresholdReached)
         defaults?.set(Date(), forKey: TapJailConstants.StorageKey.budgetThresholdReachedAt)
         defaults?.set(stage, forKey: TapJailConstants.StorageKey.breakoutStage)
+        defaults?.set(false, forKey: TapJailConstants.StorageKey.isExtensionActive)
         defaults?.set(tapTarget, forKey: TapJailConstants.StorageKey.tapTarget)
         TapJailConstants.SharedFile.writeTapTarget(tapTarget)
         sendThresholdNotification(tapTarget: tapTarget)
@@ -69,6 +71,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults?.set(false, forKey: TapJailConstants.StorageKey.isLockActive)
         defaults?.set(false, forKey: TapJailConstants.StorageKey.budgetThresholdReached)
         defaults?.set(0, forKey: TapJailConstants.StorageKey.breakoutStage)
+        defaults?.set(false, forKey: TapJailConstants.StorageKey.isExtensionActive)
         defaults?.set(
             TapJailConstants.DeviceActivity.tapsRequired(for: 0),
             forKey: TapJailConstants.StorageKey.tapTarget

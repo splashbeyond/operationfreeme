@@ -21,6 +21,7 @@
 - Removed App Group preference reads from the shield UI and action extensions; tap thresholds now use an atomic shared state file to avoid CFPrefs plugin-query warnings.
 - Start and Update Budget now register a dedicated activity interval beginning at the button press, verify that iOS retained the threshold, and hand off to the repeating midnight schedule after the first day.
 - Expanded daily budget selection to every 15-minute interval from 15 minutes through 8 hours.
+- Simplified Today's Budget into enforcement states instead of Screen Time usage: configured allowance, zero at lock with required taps, and the granted extension with the next tap requirement.
 
 ## Screen Time Reporting Note
 

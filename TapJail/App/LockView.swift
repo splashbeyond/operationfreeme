@@ -1,10 +1,5 @@
 import FamilyControls
-import DeviceActivity
 import SwiftUI
-
-private extension DeviceActivityReport.Context {
-    static let tapJailBudget = Self("tapjail.budget")
-}
 
 struct LockView: View {
     @Binding var route: AppRoute
@@ -142,31 +137,16 @@ struct LockView: View {
             }
 
             VStack(alignment: .leading, spacing: 5) {
-                if jail.isBudgetMonitoring
-                    && jail.hasSelection
-                    && !jail.isOnboardingDay
-                    && !jail.isLockActive {
-                    DeviceActivityReport(
-                        .tapJailBudget,
-                        filter: dailyUsageFilter
-                    )
-                    .id(jail.budgetStartedAt)
-                    .frame(height: 82)
-                } else {
-                    Text(heroValue)
-                        .font(.tapJail(52, weight: .bold))
-                        .foregroundStyle(TapJailColor.white)
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.75)
+                Text(heroValue)
+                    .font(.tapJail(52, weight: .bold))
+                    .foregroundStyle(TapJailColor.white)
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.75)
 
-                    Text(heroCaption)
-                        .font(.tapJail(16, weight: .light))
-                        .foregroundStyle(TapJailColor.muted)
-                }
-            }
-
-            if !jail.isBudgetMonitoring || jail.isOnboardingDay {
-                BudgetProgressBar(progress: heroProgress)
+                Text(heroCaption)
+                    .font(.tapJail(16, weight: .light))
+                    .foregroundStyle(TapJailColor.muted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             if !jail.isBudgetMonitoring {
@@ -258,25 +238,26 @@ struct LockView: View {
     }
 
     private var heroValue: String {
-        jail.isLockActive ? "0 min" : durationText(jail.dailyBudgetMinutes)
+        if jail.isLockActive {
+            return "0 min left"
+        }
+        if jail.isExtensionActive {
+            return "\(jail.activeExtensionMinutes) min left"
+        }
+        return durationText(jail.dailyBudgetMinutes)
     }
 
     private var heroCaption: String {
         if jail.isLockActive {
-            return "Daily budget reached"
+            return "Tap \(jail.tapTarget) times to break out"
         }
-        if jail.isBudgetMonitoring && jail.isOnboardingDay {
-            return "Budget active · usage starts from setup"
+        if jail.isExtensionActive {
+            return "Next time, tap \(jail.nextTapTarget) times to break out"
         }
         if jail.isBudgetMonitoring {
-            return "\(durationText(jail.dailyBudgetMinutes)) allocated today"
+            return "Your selected apps lock when this budget is reached"
         }
         return "Choose a limit for selected apps"
-    }
-
-    private var heroProgress: Double {
-        if jail.isLockActive { return 1 }
-        return 0
     }
 
     private var statusText: String {
@@ -299,34 +280,6 @@ struct LockView: View {
 
     private var settingsDetail: String {
         hasScreenTimeAuthorization ? "Screen Time connected" : "Screen Time access needed"
-    }
-
-    private var dailyUsageFilter: DeviceActivityFilter {
-        let calendar = Calendar.current
-        let now = Date()
-        let startOfToday = calendar.startOfDay(for: now)
-        let savedStart = jail.budgetStartedAt
-        let reportStart: Date
-
-        if jail.isOnboardingDay,
-           let savedStart,
-           calendar.isDate(savedStart, inSameDayAs: now) {
-            reportStart = max(savedStart, startOfToday)
-        } else {
-            reportStart = startOfToday
-        }
-
-        let endOfToday = calendar.date(byAdding: .day, value: 1, to: startOfToday) ?? now
-        let interval = DateInterval(start: reportStart, end: endOfToday)
-
-        return DeviceActivityFilter(
-            segment: .daily(during: interval),
-            users: .all,
-            devices: .all,
-            applications: jail.selection.applicationTokens,
-            categories: jail.selection.categoryTokens,
-            webDomains: jail.selection.webDomainTokens
-        )
     }
 
     private var hasScreenTimeAuthorization: Bool {
@@ -665,26 +618,6 @@ private struct SettingsView: View {
 
     private var authorizationStatusText: String {
         hasScreenTimeAuthorization ? "Connected" : "Not connected"
-    }
-}
-
-private struct BudgetProgressBar: View {
-    let progress: Double
-
-    var body: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(TapJailColor.raised)
-
-                Capsule()
-                    .fill(progress >= 1 ? TapJailColor.red : TapJailColor.green)
-                    .frame(width: max(progress > 0 ? 8 : 0, proxy.size.width * progress))
-            }
-        }
-        .frame(height: 8)
-        .accessibilityLabel("Budget progress")
-        .accessibilityValue(progress >= 1 ? "Budget reached" : "Budget active")
     }
 }
 
