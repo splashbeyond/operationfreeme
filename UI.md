@@ -17,6 +17,7 @@
 - Limited that grace baseline to the calendar day onboarding is completed; later days count selected-app usage from midnight.
 - Replaced report-extension App Group preference reads with an atomic shared configuration file to avoid CFPrefs container warnings.
 - Made the onboarding-day budget card intentionally static after Start or Update Budget; enforcement still begins from setup, while report-based usage returns after midnight.
+- Kept the current shield active until the next extension monitor is successfully scheduled, preventing an unlocked fallback if iOS rejects a schedule.
 
 ## Screen Time Reporting Note
 

@@ -125,15 +125,21 @@ final class JailController: ObservableObject {
         let nextStage = currentStage + 1
         let nextTapTarget = TapJailConstants.DeviceActivity.tapsRequired(for: nextStage)
 
-        unlock()
-        defaults?.set(false, forKey: TapJailConstants.StorageKey.budgetThresholdReached)
         if hasTimeForFullExtension(minutes: extensionMinutes) {
-            scheduleExtension(stage: nextStage, minutes: extensionMinutes)
-            sendExtensionGrantedNotification(
-                extensionMinutes: extensionMinutes,
-                nextTapTarget: nextTapTarget
-            )
+            if scheduleExtension(stage: nextStage, minutes: extensionMinutes) {
+                unlock()
+                defaults?.set(
+                    false,
+                    forKey: TapJailConstants.StorageKey.budgetThresholdReached
+                )
+                sendExtensionGrantedNotification(
+                    extensionMinutes: extensionMinutes,
+                    nextTapTarget: nextTapTarget
+                )
+            }
         } else {
+            unlock()
+            defaults?.set(false, forKey: TapJailConstants.StorageKey.budgetThresholdReached)
             activityCenter.stopMonitoring([TapJailConstants.DeviceActivity.extensionBudget])
             sendUnlockedUntilMidnightNotification()
         }
@@ -368,7 +374,8 @@ final class JailController: ObservableObject {
             : TapJailConstants.DeviceActivity.extensionMinutes
     }
 
-    private func scheduleExtension(stage: Int, minutes: Int) {
+    @discardableResult
+    private func scheduleExtension(stage: Int, minutes: Int) -> Bool {
         let now = Date()
         let calendar = Calendar.current
 
@@ -391,8 +398,10 @@ final class JailController: ObservableObject {
                 events: [TapJailConstants.DeviceActivity.event(for: stage): event]
             )
             errorMessage = nil
+            return true
         } catch {
             errorMessage = "Could not start the next \(minutes)-minute extension: \(error.localizedDescription)"
+            return false
         }
     }
 
