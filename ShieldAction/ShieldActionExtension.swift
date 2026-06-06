@@ -2,6 +2,8 @@ import ManagedSettings
 import UserNotifications
 
 final class ShieldActionExtension: ShieldActionDelegate {
+    private let defaults = UserDefaults(suiteName: TapJailConstants.appGroupID)
+
     override func handle(action: ShieldAction, for application: ApplicationToken, completionHandler: @escaping (ShieldActionResponse) -> Void) {
         handle(action: action, completionHandler: completionHandler)
     }
@@ -17,9 +19,9 @@ final class ShieldActionExtension: ShieldActionDelegate {
     private func handle(action: ShieldAction, completionHandler: @escaping (ShieldActionResponse) -> Void) {
         switch action {
         case .primaryButtonPressed:
-            sendBreakoutNotification()
-            completionHandler(.defer)
+            completionHandler(.close)
         case .secondaryButtonPressed:
+            sendBreakoutNotification()
             completionHandler(.defer)
         @unknown default:
             completionHandler(.defer)
@@ -27,9 +29,12 @@ final class ShieldActionExtension: ShieldActionDelegate {
     }
 
     private func sendBreakoutNotification() {
+        let savedTapTarget = defaults?.integer(forKey: TapJailConstants.StorageKey.tapTarget) ?? 0
+        let tapTarget = savedTapTarget > 0 ? savedTapTarget : 100
+
         let content = UNMutableNotificationContent()
         content.title = "Tap to enter TapJail"
-        content.body = "Pay the toll to break out."
+        content.body = "Tap \(tapTarget) times to break out of TapJail."
         content.sound = .default
         content.userInfo = ["route": "prison"]
 
@@ -42,4 +47,3 @@ final class ShieldActionExtension: ShieldActionDelegate {
         UNUserNotificationCenter.current().add(request)
     }
 }
-

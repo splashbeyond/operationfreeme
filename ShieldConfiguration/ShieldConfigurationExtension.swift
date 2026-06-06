@@ -3,6 +3,8 @@ import ManagedSettingsUI
 import UIKit
 
 final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
+    private let defaults = UserDefaults(suiteName: TapJailConstants.appGroupID)
+
     override func configuration(shielding application: Application) -> ShieldConfiguration {
         configuration()
     }
@@ -20,17 +22,25 @@ final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     }
 
     private func configuration() -> ShieldConfiguration {
-        ShieldConfiguration(
+        let savedTapTarget = defaults?.integer(forKey: TapJailConstants.StorageKey.tapTarget) ?? 0
+        let tapTarget = savedTapTarget > 0 ? savedTapTarget : 100
+
+        return ShieldConfiguration(
             backgroundBlurStyle: nil,
             backgroundColor: TapJailShieldColor.black,
+            icon: UIImage(
+                named: "TapJailShieldLogo",
+                in: Bundle(for: ShieldConfigurationExtension.self),
+                compatibleWith: nil
+            ),
             title: ShieldConfiguration.Label(text: "You are in TapJail.", color: TapJailShieldColor.white),
             subtitle: ShieldConfiguration.Label(
-                text: "You used your time. Pay the toll to break out.",
+                text: "Tap \(tapTarget) times to break out.",
                 color: TapJailShieldColor.muted
             ),
-            primaryButtonLabel: ShieldConfiguration.Label(text: "Break Out of TapJail", color: TapJailShieldColor.black),
+            primaryButtonLabel: ShieldConfiguration.Label(text: "Stay Focused", color: TapJailShieldColor.black),
             primaryButtonBackgroundColor: TapJailShieldColor.green,
-            secondaryButtonLabel: ShieldConfiguration.Label(text: "I'm done.", color: TapJailShieldColor.white)
+            secondaryButtonLabel: ShieldConfiguration.Label(text: "Break Out of TapJail", color: TapJailShieldColor.white)
         )
     }
 }

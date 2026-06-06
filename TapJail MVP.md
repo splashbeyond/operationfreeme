@@ -185,7 +185,7 @@ You are in TapJail.
 Subtitle:
 
 ```text
-You used your time. Pay the toll to break out.
+You used your time. Tap 100 times to break out.
 ```
 
 Primary button:

@@ -21,6 +21,9 @@ struct RootView: View {
                 route = .prison
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            jail.refreshSharedState()
+        }
     }
 }
 

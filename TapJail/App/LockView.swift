@@ -10,25 +10,6 @@ struct LockView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 10) {
-                        Circle()
-                            .fill(jail.isLockActive ? TapJailColor.red : TapJailColor.green)
-                            .frame(width: 10, height: 10)
-
-                        Text(jail.isLockActive ? "Active sentence" : "Ready")
-                            .font(.tapJail(13, weight: .bold))
-                            .foregroundStyle(jail.isLockActive ? TapJailColor.red : TapJailColor.green)
-                            .textCase(.uppercase)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(TapJailColor.surface)
-                    .overlay(
-                        Capsule()
-                            .stroke(TapJailColor.divider, lineWidth: 1)
-                    )
-                    .clipShape(Capsule())
-
                     VStack(alignment: .leading, spacing: 6) {
                         Text("TapJail")
                             .font(.tapJail(52, weight: .bold))
@@ -42,6 +23,7 @@ struct LockView: View {
 
                 statusPanel
                 selectionPanel
+                budgetPanel
                 controls
 
                 if let errorMessage = jail.errorMessage {
@@ -68,6 +50,7 @@ struct LockView: View {
         }
         .onAppear {
             jail.refreshAuthorizationStatus()
+            jail.refreshSharedState()
         }
     }
 
@@ -149,6 +132,87 @@ struct LockView: View {
             }
             .buttonStyle(TapJailSecondaryButtonStyle())
         }
+    }
+
+    private var budgetPanel: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Daily Budget")
+                    .font(.tapJail(22, weight: .bold))
+
+                Spacer()
+
+                Text(budgetDurationText)
+                    .font(.tapJail(17, weight: .bold))
+                    .foregroundStyle(TapJailColor.green)
+            }
+
+            Text("Usage is shared across everything selected above and resets at midnight.")
+                .font(.tapJail(15, weight: .light))
+                .foregroundStyle(TapJailColor.muted)
+
+            Slider(
+                value: Binding(
+                    get: { Double(jail.dailyBudgetMinutes) },
+                    set: { jail.dailyBudgetMinutes = Int($0) }
+                ),
+                in: budgetRange,
+                step: Double(TapJailConstants.DeviceActivity.budgetStepMinutes)
+            )
+            .tint(TapJailColor.green)
+            .accessibilityLabel("Daily app budget")
+            .accessibilityValue(budgetDurationText)
+
+            Button {
+                jail.startDailyBudget()
+            } label: {
+                Text(jail.isBudgetMonitoring ? "Update Daily Budget" : "Start Daily Budget")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(TapJailPrimaryButtonStyle())
+            .disabled(!hasScreenTimeAuthorization || !jail.hasSelection)
+
+#if DEBUG
+            Button {
+                jail.startDailyBudget(minutes: 1)
+            } label: {
+                Text("Start 1-Minute Device Test")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(TapJailSecondaryButtonStyle())
+            .disabled(!hasScreenTimeAuthorization || !jail.hasSelection)
+
+            if jail.isBudgetMonitoring {
+                Button {
+                    jail.stopDailyBudget()
+                } label: {
+                    Text("Stop Budget Test")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(TapJailDestructiveButtonStyle())
+            }
+#endif
+        }
+        .panelStyle()
+    }
+
+    private var budgetDurationText: String {
+        let hours = jail.dailyBudgetMinutes / 60
+        let minutes = jail.dailyBudgetMinutes % 60
+
+        if hours == 0 {
+            return "\(minutes) min"
+        }
+        if minutes == 0 {
+            return "\(hours) hr"
+        }
+        return "\(hours) hr \(minutes) min"
+    }
+
+    private var budgetRange: ClosedRange<Double> {
+        let minimum = Double(TapJailConstants.DeviceActivity.minimumBudgetMinutes)
+        let maximum = Double(TapJailConstants.DeviceActivity.maximumBudgetMinutes)
+        return minimum...maximum
     }
 
     private var authorizationCopy: String {

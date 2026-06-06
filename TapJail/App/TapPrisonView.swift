@@ -21,14 +21,13 @@ struct TapPrisonView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            ZStack {
-                prisonContent
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .padding(.vertical, 20)
-
-                backButton
-                    .position(x: 44, y: 34)
-            }
+            prisonContent
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .padding(.vertical, 20)
+                .overlay(alignment: .topLeading) {
+                    backButton
+                        .padding(.leading, 8)
+                }
             .frame(width: proxy.size.width, height: proxy.size.height)
             .background(TapJailColor.black)
             .onChange(of: scenePhase) { _, newPhase in
@@ -102,15 +101,10 @@ struct TapPrisonView: View {
             route = .lock
         } label: {
             Image(systemName: "chevron.left")
-                .font(.system(size: 24, weight: .semibold))
+                .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(TapJailColor.white)
-                .frame(width: 52, height: 52)
-                .background(TapJailColor.surface.opacity(0.96))
-                .overlay(
-                    Circle()
-                        .stroke(TapJailColor.divider.opacity(0.75), lineWidth: 1)
-                )
-                .clipShape(Circle())
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(TapJailIconButtonStyle())
         .accessibilityLabel("Back")
@@ -122,7 +116,7 @@ struct TapPrisonView: View {
         tapCount += 1
 
         if tapCount >= jail.tapTarget {
-            jail.unlock()
+            jail.completeBreakout()
             tapCount = 0
             route = .lock
         }
@@ -133,17 +127,51 @@ struct ProgressDots: View {
     let count: Int
     let target: Int
 
-    private let columns = Array(repeating: GridItem(.fixed(12), spacing: 6), count: 10)
+    private let gridSize: CGFloat = 174
+
+    private var rowCount: Int {
+        let squareRoot = max(1, Int(Double(target).squareRoot()))
+
+        for candidate in stride(from: squareRoot, through: 1, by: -1)
+        where target.isMultiple(of: candidate) {
+            return candidate
+        }
+
+        return 1
+    }
+
+    private var columnCount: Int {
+        max(1, target / rowCount)
+    }
+
+    private var spacing: CGFloat {
+        max(1.5, 6 * CGFloat((100 / Double(max(target, 1))).squareRoot()))
+    }
+
+    private var dotSize: CGFloat {
+        let horizontalSpacing = spacing * CGFloat(columnCount - 1)
+        let verticalSpacing = spacing * CGFloat(rowCount - 1)
+        let widthBasedSize = (gridSize - horizontalSpacing) / CGFloat(columnCount)
+        let heightBasedSize = (gridSize - verticalSpacing) / CGFloat(rowCount)
+        return max(2, min(widthBasedSize, heightBasedSize))
+    }
+
+    private var columns: [GridItem] {
+        Array(
+            repeating: GridItem(.fixed(dotSize), spacing: spacing),
+            count: columnCount
+        )
+    }
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 6) {
+        LazyVGrid(columns: columns, spacing: spacing) {
             ForEach(0..<target, id: \.self) { index in
                 Circle()
                     .fill(index < count ? TapJailColor.red : TapJailColor.raised)
-                    .frame(width: 12, height: 12)
+                    .frame(width: dotSize, height: dotSize)
             }
         }
-        .frame(maxWidth: 174)
+        .frame(width: gridSize, height: gridSize)
         .accessibilityLabel("\(count) of \(target) taps complete")
     }
 }
