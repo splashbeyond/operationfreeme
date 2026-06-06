@@ -1,3 +1,4 @@
+import DeviceActivity
 import FamilyControls
 import SwiftUI
 
@@ -468,6 +469,10 @@ private struct UsageView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var jail: JailController
 
+    private var todayInterval: DateInterval {
+        Calendar.current.dateInterval(of: .day, for: Date()) ?? DateInterval()
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -482,6 +487,26 @@ private struct UsageView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
+                // Live screen time report from DeviceActivity
+                if jail.isBudgetMonitoring {
+                    DeviceActivityReport(
+                        .init("tapjail.budget"),
+                        filter: DeviceActivityFilter(
+                            segment: .daily(during: todayInterval),
+                            users: .all,
+                            devices: .init([.iPhone])
+                        )
+                    )
+                    .frame(minHeight: 100)
+                    .padding(20)
+                    .background(TapJailColor.surface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(TapJailColor.divider, lineWidth: 1)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+
                 VStack(spacing: 0) {
                     usageStat(title: "Daily budget", value: durationText(jail.dailyBudgetMinutes))
                     Divider().overlay(TapJailColor.divider)
@@ -490,14 +515,6 @@ private struct UsageView: View {
                     usageStat(title: "Next breakout", value: "\(jail.tapTarget) taps")
                 }
                 .homePanel()
-
-                Label(
-                    "Exact live usage requires TapJail's Screen Time report extension. This screen currently shows the verified budget status from iOS.",
-                    systemImage: "info.circle"
-                )
-                .font(.tapJail(14, weight: .light))
-                .foregroundStyle(TapJailColor.muted)
-                .fixedSize(horizontal: false, vertical: true)
             }
             .padding(20)
         }
