@@ -16,6 +16,7 @@
 - Aligned first-day budgets to the moment monitoring starts, so Screen Time used earlier that day does not immediately consume a new user's allowance.
 - Limited that grace baseline to the calendar day onboarding is completed; later days count selected-app usage from midnight.
 - Replaced report-extension App Group preference reads with an atomic shared configuration file to avoid CFPrefs container warnings.
+- Made the onboarding-day budget card intentionally static after Start or Update Budget; enforcement still begins from setup, while report-based usage returns after midnight.
 
 ## Screen Time Reporting Note
 

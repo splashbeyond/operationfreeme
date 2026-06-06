@@ -142,7 +142,10 @@ struct LockView: View {
             }
 
             VStack(alignment: .leading, spacing: 5) {
-                if jail.isBudgetMonitoring && jail.hasSelection {
+                if jail.isBudgetMonitoring
+                    && jail.hasSelection
+                    && !jail.isOnboardingDay
+                    && !jail.isLockActive {
                     DeviceActivityReport(
                         .tapJailBudget,
                         filter: dailyUsageFilter
@@ -162,7 +165,7 @@ struct LockView: View {
                 }
             }
 
-            if !jail.isBudgetMonitoring {
+            if !jail.isBudgetMonitoring || jail.isOnboardingDay {
                 BudgetProgressBar(progress: heroProgress)
             }
 
@@ -262,6 +265,9 @@ struct LockView: View {
         if jail.isLockActive {
             return "Daily budget reached"
         }
+        if jail.isBudgetMonitoring && jail.isOnboardingDay {
+            return "Budget active · usage starts from setup"
+        }
         if jail.isBudgetMonitoring {
             return "\(durationText(jail.dailyBudgetMinutes)) allocated today"
         }
@@ -270,7 +276,7 @@ struct LockView: View {
 
     private var heroProgress: Double {
         if jail.isLockActive { return 1 }
-        return jail.isBudgetMonitoring ? 0 : 0
+        return 0
     }
 
     private var statusText: String {
@@ -300,14 +306,9 @@ struct LockView: View {
         let now = Date()
         let startOfToday = calendar.startOfDay(for: now)
         let savedStart = jail.budgetStartedAt
-        let onboardingCompletedAt = UserDefaults(suiteName: TapJailConstants.appGroupID)?
-            .object(forKey: TapJailConstants.StorageKey.onboardingCompletedAt) as? Date
-        let isOnboardingDay = onboardingCompletedAt.map {
-            calendar.isDate($0, inSameDayAs: now)
-        } ?? false
         let reportStart: Date
 
-        if isOnboardingDay,
+        if jail.isOnboardingDay,
            let savedStart,
            calendar.isDate(savedStart, inSameDayAs: now) {
             reportStart = max(savedStart, startOfToday)

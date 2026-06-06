@@ -64,6 +64,16 @@ final class JailController: ObservableObject {
         return parts.joined(separator: ", ")
     }
 
+    var isOnboardingDay: Bool {
+        guard let completedAt = defaults?.object(
+            forKey: TapJailConstants.StorageKey.onboardingCompletedAt
+        ) as? Date else {
+            return false
+        }
+
+        return Calendar.current.isDate(completedAt, inSameDayAs: Date())
+    }
+
     func requestAuthorization() async {
         do {
             try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
@@ -149,7 +159,7 @@ final class JailController: ObservableObject {
             intervalEnd: DateComponents(hour: 23, minute: 59, second: 59),
             repeats: true
         )
-        let usesOnboardingGrace = isOnboardingGraceDay
+        let usesOnboardingGrace = isOnboardingDay
         let event = makeEvent(
             minutes: thresholdMinutes,
             includesPastActivity: !usesOnboardingGrace
@@ -292,16 +302,6 @@ final class JailController: ObservableObject {
         budgetStartedAt = defaults?.object(
             forKey: TapJailConstants.StorageKey.budgetStartedAt
         ) as? Date
-    }
-
-    private var isOnboardingGraceDay: Bool {
-        guard let completedAt = defaults?.object(
-            forKey: TapJailConstants.StorageKey.onboardingCompletedAt
-        ) as? Date else {
-            return false
-        }
-
-        return Calendar.current.isDate(completedAt, inSameDayAs: Date())
     }
 
     private func migrateOnboardingGraceDayIfNeeded() {
