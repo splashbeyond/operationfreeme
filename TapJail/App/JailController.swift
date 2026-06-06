@@ -11,11 +11,15 @@ final class JailController: ObservableObject {
     @Published var authorizationStatus = AuthorizationCenter.shared.authorizationStatus
     @Published var errorMessage: String?
     @Published var dailyBudgetMinutes = 60
+    @Published var budgetDraftMinutes = 60
+    @Published var selectionDraft = FamilyActivitySelection()
     @Published var isBudgetMonitoring = false
     @Published var hasSeenOnboarding = false
     @Published private(set) var budgetStartedAt: Date?
     @Published private(set) var breakoutStage = 0
     @Published private(set) var isExtensionActive = false
+    @Published private(set) var pendingBudgetMinutes: Int?
+    @Published private(set) var pendingSelection: FamilyActivitySelection?
 
     @Published private(set) var tapTarget = 100
 
@@ -52,6 +56,62 @@ final class JailController: ObservableObject {
     }
 
     var selectionSummary: String {
+        selectionSummary(for: selection)
+    }
+
+    var selectionDraftSummary: String {
+        selectionSummary(for: selectionDraft)
+    }
+
+    var hasDraftSelection: Bool {
+        hasSelection(selectionDraft)
+    }
+
+    var hasPendingBudgetChange: Bool {
+        pendingBudgetMinutes != nil || pendingSelection != nil
+    }
+
+    var correctionWindowAvailable: Bool {
+        guard isBudgetMonitoring,
+              defaults?.bool(
+                forKey: TapJailConstants.StorageKey.isLockActive
+              ) != true,
+              !budgetWasReachedToday,
+              let committedAt = defaults?.object(
+                forKey: TapJailConstants.StorageKey.budgetCommittedAt
+              ) as? Date,
+              Calendar.current.isDate(committedAt, inSameDayAs: Date()),
+              Date().timeIntervalSince(committedAt) < 10 * 60 else {
+            return false
+        }
+
+        return defaults?.string(
+            forKey: TapJailConstants.StorageKey.correctionUsedDayIdentifier
+        ) != TapJailConstants.localDayIdentifier()
+    }
+
+    private var budgetWasReachedToday: Bool {
+        guard let reachedAt = defaults?.object(
+            forKey: TapJailConstants.StorageKey.budgetThresholdReachedAt
+        ) as? Date else {
+            return false
+        }
+        return Calendar.current.isDate(reachedAt, inSameDayAs: Date())
+    }
+
+    var budgetEditorMessage: String {
+        guard isBudgetMonitoring else {
+            return "Your budget starts when you tap Start Daily Budget."
+        }
+
+        if correctionWindowAvailable {
+            return "You have one setup correction for 10 minutes. After that, changes begin at midnight."
+        }
+
+        return "Today's budget is locked. Changes begin at midnight."
+    }
+
+    private func selectionSummary(for selection: FamilyActivitySelection) -> String {
         let appCount = selection.applicationTokens.count
         let categoryCount = selection.categoryTokens.count
         let webCount = selection.webDomainTokens.count
@@ -65,6 +125,12 @@ final class JailController: ObservableObject {
         if categoryCount > 0 { parts.append("\(categoryCount) categor\(categoryCount == 1 ? "y" : "ies")") }
         if webCount > 0 { parts.append("\(webCount) web domain\(webCount == 1 ? "" : "s")") }
         return parts.joined(separator: ", ")
+    }
+
+    private func hasSelection(_ selection: FamilyActivitySelection) -> Bool {
+        !selection.applicationTokens.isEmpty
+            || !selection.categoryTokens.isEmpty
+            || !selection.webDomainTokens.isEmpty
     }
 
     var isOnboardingDay: Bool {
@@ -104,6 +170,63 @@ final class JailController: ObservableObject {
             errorMessage = nil
         } catch {
             errorMessage = "Could not save the selected apps."
+        }
+    }
+
+    func beginBudgetEditing() {
+        budgetDraftMinutes = pendingBudgetMinutes ?? dailyBudgetMinutes
+        selectionDraft = pendingSelection ?? selection
+        errorMessage = nil
+    }
+
+    @discardableResult
+    func commitBudgetDraft() -> Bool {
+        guard hasDraftSelection else {
+            errorMessage = "Choose at least one app or category first."
+            return false
+        }
+
+        let normalizedMinutes = TapJailConstants.DeviceActivity.normalizedBudgetMinutes(
+            budgetDraftMinutes
+        )
+
+        guard isBudgetMonitoring else {
+            selection = selectionDraft
+            dailyBudgetMinutes = normalizedMinutes
+            startDailyBudget()
+            return errorMessage == nil
+        }
+
+        if correctionWindowAvailable {
+            selection = selectionDraft
+            dailyBudgetMinutes = normalizedMinutes
+            startDailyBudget()
+            if errorMessage == nil {
+                defaults?.set(
+                    TapJailConstants.localDayIdentifier(),
+                    forKey: TapJailConstants.StorageKey.correctionUsedDayIdentifier
+                )
+            }
+            return errorMessage == nil
+        }
+
+        do {
+            let data = try encoder.encode(selectionDraft)
+            defaults?.set(
+                normalizedMinutes,
+                forKey: TapJailConstants.StorageKey.pendingBudgetMinutes
+            )
+            defaults?.set(
+                data,
+                forKey: TapJailConstants.StorageKey.pendingActivitySelection
+            )
+            pendingBudgetMinutes = normalizedMinutes
+            pendingSelection = selectionDraft
+            errorMessage = nil
+            return true
+        } catch {
+            errorMessage = "Could not schedule tomorrow's budget."
+            return false
         }
     }
 
@@ -226,6 +349,20 @@ final class JailController: ObservableObject {
                 budgetStartedAt,
                 forKey: TapJailConstants.StorageKey.budgetStartedAt
             )
+            if let committedAt = defaults?.object(
+                forKey: TapJailConstants.StorageKey.budgetCommittedAt
+            ) as? Date,
+               Calendar.current.isDate(committedAt, inSameDayAs: budgetStartedAt) {
+                // Preserve the original setup time so a correction cannot extend its window.
+            } else {
+                defaults?.set(
+                    budgetStartedAt,
+                    forKey: TapJailConstants.StorageKey.budgetCommittedAt
+                )
+                defaults?.removeObject(
+                    forKey: TapJailConstants.StorageKey.correctionUsedDayIdentifier
+                )
+            }
             writeReportConfiguration(
                 budgetMinutes: thresholdMinutes,
                 startedAt: budgetStartedAt
@@ -266,6 +403,10 @@ final class JailController: ObservableObject {
         defaults?.set(false, forKey: TapJailConstants.StorageKey.isBudgetMonitoring)
         defaults?.removeObject(forKey: TapJailConstants.StorageKey.activeBudgetMinutes)
         defaults?.removeObject(forKey: TapJailConstants.StorageKey.budgetStartedAt)
+        defaults?.removeObject(forKey: TapJailConstants.StorageKey.budgetCommittedAt)
+        defaults?.removeObject(forKey: TapJailConstants.StorageKey.correctionUsedDayIdentifier)
+        defaults?.removeObject(forKey: TapJailConstants.StorageKey.pendingBudgetMinutes)
+        defaults?.removeObject(forKey: TapJailConstants.StorageKey.pendingActivitySelection)
         removeReportConfiguration()
         budgetStartedAt = nil
         defaults?.set(false, forKey: TapJailConstants.StorageKey.budgetThresholdReached)
@@ -280,6 +421,8 @@ final class JailController: ObservableObject {
         tapTarget = 100
         breakoutStage = 0
         isExtensionActive = false
+        pendingBudgetMinutes = nil
+        pendingSelection = nil
         isBudgetMonitoring = false
         unlock()
     }
@@ -307,6 +450,7 @@ final class JailController: ObservableObject {
     }
 
     func refreshSharedState() {
+        loadCurrentAndPendingConfiguration()
         isLockActive = defaults?.bool(forKey: TapJailConstants.StorageKey.isLockActive) ?? false
         let savedTarget = defaults?.integer(forKey: TapJailConstants.StorageKey.tapTarget) ?? 0
         tapTarget = savedTarget > 0 ? savedTarget : 100
@@ -333,19 +477,10 @@ final class JailController: ObservableObject {
     }
 
     private func loadState() {
-        if let data = defaults?.data(forKey: TapJailConstants.StorageKey.selectedActivitySelection),
-           let savedSelection = try? decoder.decode(FamilyActivitySelection.self, from: data) {
-            selection = savedSelection
-        }
+        loadCurrentAndPendingConfiguration()
 
         isLockActive = defaults?.bool(forKey: TapJailConstants.StorageKey.isLockActive) ?? false
         hasSeenOnboarding = defaults?.bool(forKey: TapJailConstants.StorageKey.hasSeenOnboarding) ?? false
-        let savedBudget = defaults?.integer(
-            forKey: TapJailConstants.StorageKey.dailyBudgetMinutes
-        ) ?? 0
-        dailyBudgetMinutes = savedBudget > 0
-            ? TapJailConstants.DeviceActivity.normalizedBudgetMinutes(savedBudget)
-            : 60
         isBudgetMonitoring = defaults?.bool(
             forKey: TapJailConstants.StorageKey.isBudgetMonitoring
         ) ?? false
@@ -358,6 +493,44 @@ final class JailController: ObservableObject {
         budgetStartedAt = defaults?.object(
             forKey: TapJailConstants.StorageKey.budgetStartedAt
         ) as? Date
+        beginBudgetEditing()
+    }
+
+    private func loadCurrentAndPendingConfiguration() {
+        if let data = defaults?.data(
+            forKey: TapJailConstants.StorageKey.selectedActivitySelection
+        ),
+           let savedSelection = try? decoder.decode(
+            FamilyActivitySelection.self,
+            from: data
+           ) {
+            selection = savedSelection
+        }
+
+        let savedBudget = defaults?.integer(
+            forKey: TapJailConstants.StorageKey.dailyBudgetMinutes
+        ) ?? 0
+        dailyBudgetMinutes = savedBudget > 0
+            ? TapJailConstants.DeviceActivity.normalizedBudgetMinutes(savedBudget)
+            : 60
+
+        let pendingMinutes = defaults?.integer(
+            forKey: TapJailConstants.StorageKey.pendingBudgetMinutes
+        ) ?? 0
+        pendingBudgetMinutes = pendingMinutes > 0
+            ? TapJailConstants.DeviceActivity.normalizedBudgetMinutes(pendingMinutes)
+            : nil
+
+        if let data = defaults?.data(
+            forKey: TapJailConstants.StorageKey.pendingActivitySelection
+        ) {
+            pendingSelection = try? decoder.decode(
+                FamilyActivitySelection.self,
+                from: data
+            )
+        } else {
+            pendingSelection = nil
+        }
     }
 
     private func migrateOnboardingGraceDayIfNeeded() {

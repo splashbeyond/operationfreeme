@@ -21,6 +21,7 @@ struct LockView: View {
                         title: "Budget & Apps",
                         detail: budgetAndAppsDetail
                     ) {
+                        jail.beginBudgetEditing()
                         presentedSheet = .budget
                     }
 
@@ -77,11 +78,10 @@ struct LockView: View {
             headerText: "Choose what TapJail blocks.",
             footerText: "These selections stay on this device.",
             isPresented: $isPickerPresented,
-            selection: $jail.selection
+            selection: $jail.selectionDraft
         )
         .onChange(of: isPickerPresented) { _, isPresented in
             if !isPresented {
-                jail.saveSelection()
                 guard shouldReturnToBudgetEditor else { return }
                 shouldReturnToBudgetEditor = false
                 Task { @MainActor in
@@ -151,6 +151,7 @@ struct LockView: View {
 
             if !jail.isBudgetMonitoring {
                 Button {
+                    jail.beginBudgetEditing()
                     presentedSheet = .budget
                 } label: {
                     Text(jail.hasSelection ? "Start Daily Budget" : "Set Your Daily Budget")
@@ -271,7 +272,10 @@ struct LockView: View {
     }
 
     private var budgetAndAppsDetail: String {
-        "\(durationText(jail.dailyBudgetMinutes)) · \(jail.selectionSummary)"
+        if let pendingBudgetMinutes = jail.pendingBudgetMinutes {
+            return "Today \(durationText(jail.dailyBudgetMinutes)) · Tomorrow \(durationText(pendingBudgetMinutes))"
+        }
+        return "\(durationText(jail.dailyBudgetMinutes)) · \(jail.selectionSummary)"
     }
 
     private var usageDetail: String {
@@ -316,7 +320,7 @@ private struct BudgetEditorView: View {
 
                         Spacer()
 
-                        Text(durationText(jail.dailyBudgetMinutes))
+                        Text(durationText(jail.budgetDraftMinutes))
                             .font(.tapJail(22, weight: .bold))
                             .foregroundStyle(TapJailColor.green)
                             .monospacedDigit()
@@ -324,15 +328,15 @@ private struct BudgetEditorView: View {
 
                     Slider(
                         value: Binding(
-                            get: { Double(jail.dailyBudgetMinutes) },
-                            set: { jail.dailyBudgetMinutes = Int($0) }
+                            get: { Double(jail.budgetDraftMinutes) },
+                            set: { jail.budgetDraftMinutes = Int($0) }
                         ),
                         in: budgetRange,
                         step: Double(TapJailConstants.DeviceActivity.budgetStepMinutes)
                     )
                     .tint(TapJailColor.green)
                     .accessibilityLabel("Daily app budget")
-                    .accessibilityValue(durationText(jail.dailyBudgetMinutes))
+                    .accessibilityValue(durationText(jail.budgetDraftMinutes))
 
                     HStack {
                         Text("15 min")
@@ -342,7 +346,7 @@ private struct BudgetEditorView: View {
                     .font(.tapJail(12, weight: .light))
                     .foregroundStyle(TapJailColor.muted)
 
-                    Text("Usage is shared across selected apps and resets at midnight.")
+                    Text(jail.budgetEditorMessage)
                         .font(.tapJail(14, weight: .light))
                         .foregroundStyle(TapJailColor.muted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -354,7 +358,7 @@ private struct BudgetEditorView: View {
                         .font(.tapJail(17, weight: .bold))
                         .foregroundStyle(TapJailColor.white)
 
-                    Text(jail.selectionSummary)
+                    Text(jail.selectionDraftSummary)
                         .font(.tapJail(14, weight: .light))
                         .foregroundStyle(TapJailColor.muted)
 
@@ -369,16 +373,15 @@ private struct BudgetEditorView: View {
                 .homePanel()
 
                 Button {
-                    jail.startDailyBudget()
-                    if jail.errorMessage == nil {
+                    if jail.commitBudgetDraft() {
                         dismiss()
                     }
                 } label: {
-                    Text(jail.isBudgetMonitoring ? "Update Daily Budget" : "Start Daily Budget")
+                    Text(updateButtonTitle)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(TapJailPrimaryButtonStyle())
-                .disabled(!hasScreenTimeAuthorization || !jail.hasSelection)
+                .disabled(!hasScreenTimeAuthorization || !jail.hasDraftSelection)
 
                 if !hasScreenTimeAuthorization {
                     Button {
@@ -407,6 +410,15 @@ private struct BudgetEditorView: View {
         let minimum = Double(TapJailConstants.DeviceActivity.minimumBudgetMinutes)
         let maximum = Double(TapJailConstants.DeviceActivity.maximumBudgetMinutes)
         return minimum...maximum
+    }
+
+    private var updateButtonTitle: String {
+        if !jail.isBudgetMonitoring {
+            return "Start Daily Budget"
+        }
+        return jail.correctionWindowAvailable
+            ? "Use Setup Correction"
+            : "Schedule for Midnight"
     }
 
     private var hasScreenTimeAuthorization: Bool {

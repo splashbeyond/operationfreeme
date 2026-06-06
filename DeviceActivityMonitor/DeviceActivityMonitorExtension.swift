@@ -22,7 +22,9 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults?.set(false, forKey: TapJailConstants.StorageKey.budgetThresholdReached)
         defaults?.set(false, forKey: TapJailConstants.StorageKey.isExtensionActive)
 
-        if activity == TapJailConstants.DeviceActivity.activeSessionBudget {
+        if activity == TapJailConstants.DeviceActivity.activeSessionBudget
+            || activity == TapJailConstants.DeviceActivity.dailyBudget {
+            promotePendingConfiguration()
             startRepeatingDailyBudget()
         }
     }
@@ -162,5 +164,35 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         } catch {
             defaults?.set(false, forKey: TapJailConstants.StorageKey.isBudgetMonitoring)
         }
+    }
+
+    private func promotePendingConfiguration() {
+        let pendingMinutes = defaults?.integer(
+            forKey: TapJailConstants.StorageKey.pendingBudgetMinutes
+        ) ?? 0
+        if pendingMinutes > 0 {
+            defaults?.set(
+                pendingMinutes,
+                forKey: TapJailConstants.StorageKey.dailyBudgetMinutes
+            )
+            defaults?.set(
+                pendingMinutes,
+                forKey: TapJailConstants.StorageKey.activeBudgetMinutes
+            )
+        }
+
+        if let pendingSelection = defaults?.data(
+            forKey: TapJailConstants.StorageKey.pendingActivitySelection
+        ) {
+            defaults?.set(
+                pendingSelection,
+                forKey: TapJailConstants.StorageKey.selectedActivitySelection
+            )
+        }
+
+        defaults?.removeObject(forKey: TapJailConstants.StorageKey.pendingBudgetMinutes)
+        defaults?.removeObject(forKey: TapJailConstants.StorageKey.pendingActivitySelection)
+        defaults?.removeObject(forKey: TapJailConstants.StorageKey.budgetCommittedAt)
+        defaults?.removeObject(forKey: TapJailConstants.StorageKey.correctionUsedDayIdentifier)
     }
 }

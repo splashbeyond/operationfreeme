@@ -22,6 +22,7 @@
 - Start and Update Budget now register a dedicated activity interval beginning at the button press, verify that iOS retained the threshold, and hand off to the repeating midnight schedule after the first day.
 - Expanded daily budget selection to every 15-minute interval from 15 minutes through 8 hours.
 - Simplified Today's Budget into enforcement states instead of Screen Time usage: configured allowance, zero at lock with required taps, and the granted extension with the next tap requirement.
+- Locked active budgets and app selections for the day, with one correction during the first 10 minutes before lock; later edits are clearly scheduled for midnight.
 
 ## Screen Time Reporting Note
 
