@@ -5,102 +5,75 @@ struct LockView: View {
     @Binding var route: AppRoute
     @EnvironmentObject private var jail: JailController
     @State private var presentedSheet: HomeSheet?
-    @State private var isPickerPresented = false
-    @State private var shouldPresentPicker = false
-    @State private var shouldReturnToBudgetEditor = false
+    @State private var isLimitEditorPresented = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                brandHeader
-                budgetHero
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    brandHeader
+                    budgetHero
 
-                VStack(spacing: 12) {
-                    navigationRow(
-                        icon: "slider.horizontal.3",
-                        title: "Limit & Apps",
-                        detail: budgetAndAppsDetail
-                    ) {
-                        jail.beginBudgetEditing()
-                        presentedSheet = .budget
+                    VStack(spacing: 12) {
+                        navigationRow(
+                            icon: "slider.horizontal.3",
+                            title: "Limit & Apps",
+                            detail: budgetAndAppsDetail
+                        ) {
+                            jail.beginBudgetEditing()
+                            isLimitEditorPresented = true
+                        }
+
+                        navigationRow(
+                            icon: "chart.bar.xaxis",
+                            title: "Usage",
+                            detail: usageDetail
+                        ) {
+                            presentedSheet = .usage
+                        }
+
+                        navigationRow(
+                            icon: "gearshape",
+                            title: "Settings",
+                            detail: settingsDetail
+                        ) {
+                            presentedSheet = .settings
+                        }
                     }
 
-                    navigationRow(
-                        icon: "chart.bar.xaxis",
-                        title: "Usage",
-                        detail: usageDetail
-                    ) {
-                        presentedSheet = .usage
-                    }
-
-                    navigationRow(
-                        icon: "gearshape",
-                        title: "Settings",
-                        detail: settingsDetail
-                    ) {
-                        presentedSheet = .settings
+                    if let errorMessage = jail.errorMessage {
+                        Label(errorMessage, systemImage: "exclamationmark.circle.fill")
+                            .font(.tapJail(14, weight: .bold))
+                            .foregroundStyle(TapJailColor.red)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 4)
                     }
                 }
-
-                if let errorMessage = jail.errorMessage {
-                    Label(errorMessage, systemImage: "exclamationmark.circle.fill")
-                        .font(.tapJail(14, weight: .bold))
-                        .foregroundStyle(TapJailColor.red)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 4)
-                }
+                .padding(.horizontal, 20)
+                .padding(.top, 18)
+                .padding(.bottom, 32)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 18)
-            .padding(.bottom, 32)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .background(TapJailColor.black)
-        .sheet(item: $presentedSheet) { sheet in
-            NavigationStack {
-                switch sheet {
-                case .budget:
-                    BudgetEditorView {
-                        shouldPresentPicker = true
-                        shouldReturnToBudgetEditor = true
-                        presentedSheet = nil
+            .background(TapJailColor.black)
+            .navigationDestination(isPresented: $isLimitEditorPresented) {
+                BudgetEditorView()
+            }
+            .sheet(item: $presentedSheet) { sheet in
+                NavigationStack {
+                    switch sheet {
+                    case .usage:
+                        UsageView()
+                    case .settings:
+                        SettingsView(route: $route)
                     }
-                case .usage:
-                    UsageView()
-                case .settings:
-                    SettingsView(route: $route)
                 }
+                .presentationDragIndicator(.visible)
+                .presentationBackground(TapJailColor.black)
             }
-            .presentationDragIndicator(.visible)
-            .presentationBackground(TapJailColor.black)
-        }
-        .familyActivityPicker(
-            headerText: "Choose what TapJail blocks.",
-            footerText: "These selections stay on this device.",
-            isPresented: $isPickerPresented,
-            selection: $jail.selectionDraft
-        )
-        .onChange(of: isPickerPresented) { _, isPresented in
-            if !isPresented {
-                guard shouldReturnToBudgetEditor else { return }
-                shouldReturnToBudgetEditor = false
-                Task { @MainActor in
-                    try? await Task.sleep(for: .milliseconds(300))
-                    presentedSheet = .budget
-                }
+            .onAppear {
+                jail.refreshAuthorizationStatus()
+                jail.refreshSharedState()
             }
-        }
-        .onChange(of: presentedSheet) { _, sheet in
-            guard sheet == nil, shouldPresentPicker else { return }
-            shouldPresentPicker = false
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(350))
-                isPickerPresented = true
-            }
-        }
-        .onAppear {
-            jail.refreshAuthorizationStatus()
-            jail.refreshSharedState()
         }
     }
 
@@ -152,7 +125,7 @@ struct LockView: View {
             if !jail.isBudgetMonitoring {
                 Button {
                     jail.beginBudgetEditing()
-                    presentedSheet = .budget
+                    isLimitEditorPresented = true
                 } label: {
                     Text(jail.hasSelection ? "Start Daily App Limit" : "Set Your App Limit")
                         .frame(maxWidth: .infinity)
@@ -297,7 +270,6 @@ struct LockView: View {
 }
 
 private enum HomeSheet: String, Identifiable {
-    case budget
     case usage
     case settings
 
@@ -308,7 +280,7 @@ private struct BudgetEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var jail: JailController
     @State private var isChangeConfirmationPresented = false
-    let chooseApps: () -> Void
+    @State private var isPickerPresented = false
 
     var body: some View {
         ScrollView {
@@ -364,7 +336,7 @@ private struct BudgetEditorView: View {
                         .foregroundStyle(TapJailColor.muted)
 
                     Button {
-                        chooseApps()
+                        isPickerPresented = true
                     } label: {
                         Label("Choose Apps", systemImage: "app.badge.checkmark")
                             .frame(maxWidth: .infinity)
@@ -416,6 +388,12 @@ private struct BudgetEditorView: View {
         .background(TapJailColor.black)
         .navigationTitle("Limit & Apps")
         .navigationBarTitleDisplayMode(.inline)
+        .familyActivityPicker(
+            headerText: "Choose what TapJail blocks.",
+            footerText: "These selections stay on this device.",
+            isPresented: $isPickerPresented,
+            selection: $jail.selectionDraft
+        )
         .confirmationDialog(
             confirmationTitle,
             isPresented: $isChangeConfirmationPresented,
@@ -429,12 +407,6 @@ private struct BudgetEditorView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text(confirmationMessage)
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Done") { dismiss() }
-                    .foregroundStyle(TapJailColor.green)
-            }
         }
     }
 

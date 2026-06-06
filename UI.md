@@ -6,6 +6,7 @@
 - Replaced the setup-heavy home screen with a focused daily budget dashboard.
 - Added a primary limit card with the configured time, monitoring state, limit-reached state, and progress treatment.
 - Combined the limit slider and app selection into a native `Limit & Apps` sheet.
+- Changed `Limit & Apps` to a standard pushed navigation screen. Apple's app picker now closes back onto the existing editor, removing the delayed sheet dismissal and re-opening workaround.
 - Added a `Usage` destination for the current verified Screen Time monitoring state and TapJail statistics.
 - Added a `Settings` destination for Screen Time authorization and daily reset information.
 - Kept developer-only controls for the one-minute test, manual lock, prison routing, and stopping a budget inside Settings.
