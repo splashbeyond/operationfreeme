@@ -43,6 +43,11 @@
 		100000000000000000000D01 /* DeviceActivityReportExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000D11 /* DeviceActivityReportExtension.swift */; };
 		100000000000000000000D02 /* DeviceActivityReport.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 100000000000000000000D14 /* DeviceActivityReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		72C73F4D2FD4C9CB000A1BC9 /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72C73F4C2FD4C9CB000A1BC9 /* Charts.framework */; };
+		72C73F502FD4FEEC000A1BC9 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 72C73F4F2FD4FEEC000A1BC9 /* RevenueCat */; };
+		72C73F522FD4FEEC000A1BC9 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 72C73F512FD4FEEC000A1BC9 /* RevenueCatUI */; };
+		72C73F572FD4FFBB000A1BC9 /* CustomerCenterSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72C73F532FD4FFBB000A1BC9 /* CustomerCenterSheet.swift */; };
+		72C73F582FD4FFBB000A1BC9 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72C73F542FD4FFBB000A1BC9 /* PaywallView.swift */; };
+		72C73F592FD4FFBB000A1BC9 /* PurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72C73F552FD4FFBB000A1BC9 /* PurchaseManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -138,6 +143,9 @@
 		100000000000000000000D13 /* DeviceActivityReport.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DeviceActivityReport.entitlements; sourceTree = "<group>"; };
 		100000000000000000000D14 /* DeviceActivityReport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DeviceActivityReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		72C73F4C2FD4C9CB000A1BC9 /* Charts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Charts.framework; path = System/Library/Frameworks/Charts.framework; sourceTree = SDKROOT; };
+		72C73F532FD4FFBB000A1BC9 /* CustomerCenterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomerCenterSheet.swift; sourceTree = "<group>"; };
+		72C73F542FD4FFBB000A1BC9 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		72C73F552FD4FFBB000A1BC9 /* PurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -145,7 +153,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				72C73F502FD4FEEC000A1BC9 /* RevenueCat in Frameworks */,
 				72C73F4D2FD4C9CB000A1BC9 /* Charts.framework in Frameworks */,
+				72C73F522FD4FEEC000A1BC9 /* RevenueCatUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -201,6 +211,7 @@
 				100000000000000000000805 /* Resources */,
 				10000000000000000000010A /* Info.plist */,
 				10000000000000000000010B /* TapJail.entitlements */,
+				72C73F562FD4FFBB000A1BC9 /* RevenueCat */,
 			);
 			path = TapJail;
 			sourceTree = "<group>";
@@ -316,6 +327,16 @@
 				72C73F4C2FD4C9CB000A1BC9 /* Charts.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		72C73F562FD4FFBB000A1BC9 /* RevenueCat */ = {
+			isa = PBXGroup;
+			children = (
+				72C73F532FD4FFBB000A1BC9 /* CustomerCenterSheet.swift */,
+				72C73F542FD4FFBB000A1BC9 /* PaywallView.swift */,
+				72C73F552FD4FFBB000A1BC9 /* PurchaseManager.swift */,
+			);
+			path = RevenueCat;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -452,6 +473,9 @@
 				Base,
 			);
 			mainGroup = 100000000000000000000801;
+			packageReferences = (
+				72C73F4E2FD4FE89000A1BC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+			);
 			productRefGroup = 100000000000000000000808 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -532,6 +556,9 @@
 				100000000000000000000005 /* TapPrisonView.swift in Sources */,
 				100000000000000000000006 /* TapJailConstants.swift in Sources */,
 				100000000000000000000021 /* OnboardingView.swift in Sources */,
+				72C73F572FD4FFBB000A1BC9 /* CustomerCenterSheet.swift in Sources */,
+				72C73F582FD4FFBB000A1BC9 /* PaywallView.swift in Sources */,
+				72C73F592FD4FFBB000A1BC9 /* PurchaseManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1023,6 +1050,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		72C73F4E2FD4FE89000A1BC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.77.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		72C73F4F2FD4FEEC000A1BC9 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 72C73F4E2FD4FE89000A1BC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
+		72C73F512FD4FEEC000A1BC9 /* RevenueCatUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 72C73F4E2FD4FE89000A1BC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCatUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 100000000000000000000401 /* Project object */;
 }
