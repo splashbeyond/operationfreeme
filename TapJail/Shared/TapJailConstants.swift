@@ -64,10 +64,11 @@ enum TapJailConstants {
         static let onboardingCompletedAt = "onboardingCompletedAt"
         static let hasSeenSetupGuide = "hasSeenSetupGuide"
         static let emotionalLevel = "emotionalLevel"
+        static let prisonMessageRotation = "prisonMessageRotation"
     }
 
     enum RevenueCat {
-        // Replace with production key before App Store submission
+        // Public RevenueCat SDK key for the TapJail app.
         static let apiKey = "appl_ZBWIGTDEzMQSByksQhujBNldruS"
         static let proEntitlement = "TapJail Pro"
 

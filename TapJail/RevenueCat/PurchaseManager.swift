@@ -7,6 +7,7 @@ final class PurchaseManager: NSObject, ObservableObject {
     static let shared = PurchaseManager()
 
     @Published private(set) var isPro: Bool = false
+    @Published private(set) var hasLoadedCustomerInfo: Bool = false
     @Published private(set) var customerInfo: CustomerInfo?
     @Published private(set) var offerings: Offerings?
     @Published var isLoading: Bool = false
@@ -21,13 +22,12 @@ final class PurchaseManager: NSObject, ObservableObject {
     // MARK: - Refresh
 
     func refresh() async {
-        async let infoTask: CustomerInfo = Purchases.shared.customerInfo()
-        async let offeringsTask: Offerings = Purchases.shared.offerings()
-
-        if let info = try? await infoTask {
+        if let info = try? await Purchases.shared.customerInfo() {
             apply(info)
         }
-        if let fetched = try? await offeringsTask {
+        hasLoadedCustomerInfo = true
+
+        if let fetched = try? await Purchases.shared.offerings() {
             offerings = fetched
         }
     }
@@ -65,11 +65,16 @@ final class PurchaseManager: NSObject, ObservableObject {
         customerInfo?.entitlements[entitlement]?.isActive == true
     }
 
+    func updateCustomerInfo(_ info: CustomerInfo) {
+        apply(info)
+    }
+
     // MARK: - Private
 
     private func apply(_ info: CustomerInfo) {
         customerInfo = info
         isPro = info.entitlements[TapJailConstants.RevenueCat.proEntitlement]?.isActive == true
+        hasLoadedCustomerInfo = true
     }
 }
 

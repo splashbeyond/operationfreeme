@@ -4,18 +4,29 @@ import UIKit
 struct RootView: View {
     @Binding var route: AppRoute
     @EnvironmentObject private var jail: JailController
+    @EnvironmentObject private var purchases: PurchaseManager
 
     var body: some View {
         ZStack {
             TapJailColor.black.ignoresSafeArea()
 
-            switch route {
-            case .onboarding:
+            if !jail.hasSeenOnboarding || route == .onboarding {
                 OnboardingView(route: $route)
-            case .lock:
-                LockView(route: $route)
-            case .prison:
+            } else if jail.isLockActive && route == .prison {
                 TapPrisonView(route: $route)
+            } else if !purchases.hasLoadedCustomerInfo {
+                entitlementLoadingView
+            } else if purchases.isPro {
+                switch route {
+                case .onboarding:
+                    OnboardingView(route: $route)
+                case .lock:
+                    LockView(route: $route)
+                case .prison:
+                    TapPrisonView(route: $route)
+                }
+            } else {
+                TapJailPaywallView()
             }
         }
         .onChange(of: jail.isLockActive) { _, isActive in
@@ -25,6 +36,20 @@ struct RootView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             jail.refreshSharedState()
+            Task {
+                await purchases.refresh()
+            }
+        }
+    }
+
+    private var entitlementLoadingView: some View {
+        VStack(spacing: 14) {
+            ProgressView()
+                .tint(TapJailColor.green)
+
+            Text("Checking subscription...")
+                .font(.tapJail(15))
+                .foregroundStyle(TapJailColor.muted)
         }
     }
 }

@@ -7,19 +7,14 @@ import RevenueCatUI
 // so no hard-coded UI is needed here.
 struct TapJailPaywallView: View {
     @EnvironmentObject private var purchases: PurchaseManager
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        PaywallView(displayCloseButton: true)
+        PaywallView(displayCloseButton: false)
             .onPurchaseCompleted { customerInfo in
-                if customerInfo.entitlements[TapJailConstants.RevenueCat.proEntitlement]?.isActive == true {
-                    dismiss()
-                }
+                purchases.updateCustomerInfo(customerInfo)
             }
             .onRestoreCompleted { customerInfo in
-                if customerInfo.entitlements[TapJailConstants.RevenueCat.proEntitlement]?.isActive == true {
-                    dismiss()
-                }
+                purchases.updateCustomerInfo(customerInfo)
             }
     }
 }
@@ -46,6 +41,11 @@ private struct ProEntitlementModifier: ViewModifier {
             }
             .fullScreenCover(isPresented: $showPaywall) {
                 TapJailPaywallView()
+            }
+            .onChange(of: purchases.isPro) { _, isPro in
+                if isPro {
+                    showPaywall = false
+                }
             }
     }
 }

@@ -36,6 +36,7 @@ enum EmotionalLevel: String, CaseIterable, Identifiable {
 }
 
 private struct PrisonMessageSet {
+    let leadIns: [String]
     let progress: [String]
     let milestones: [String]
 }
@@ -49,6 +50,8 @@ struct TapPrisonView: View {
         store: UserDefaults(suiteName: TapJailConstants.appGroupID)
     ) private var emotionalLevelRawValue = EmotionalLevel.sortaMean.rawValue
     @State private var tapCount = 0
+    @State private var messageRotation = 0
+    @State private var preparedEmotionalLevel: EmotionalLevel?
 
     var body: some View {
         GeometryReader { proxy in
@@ -61,6 +64,12 @@ struct TapPrisonView: View {
                 }
             .frame(width: proxy.size.width, height: proxy.size.height)
             .background(TapJailColor.black)
+            .onAppear {
+                prepareMessageRotation()
+            }
+            .onChange(of: emotionalLevelRawValue) {
+                prepareMessageRotation()
+            }
             .onChange(of: scenePhase) { _, newPhase in
                 guard tapCount < jail.tapTarget else { return }
                 if newPhase == .inactive || newPhase == .background {
@@ -126,14 +135,22 @@ struct TapPrisonView: View {
 
     private var currentAccountabilityMessage: String {
         let messages = messageSet
+        let message: String
+        let stageIndex: Int
 
         if tapCount >= 100 {
             let milestoneIndex = min((tapCount / 100) - 1, messages.milestones.count - 1)
-            return messages.milestones[milestoneIndex]
+            message = messages.milestones[milestoneIndex]
+            stageIndex = messages.progress.count + milestoneIndex
+        } else {
+            let messageIndex = min(tapCount / 10, messages.progress.count - 1)
+            message = messages.progress[messageIndex]
+            stageIndex = messageIndex
         }
 
-        let messageIndex = min(tapCount / 10, messages.progress.count - 1)
-        return messages.progress[messageIndex]
+        let leadInIndex = (messageRotation + stageIndex) % messages.leadIns.count
+        let leadIn = messages.leadIns[leadInIndex]
+        return leadIn + message
     }
 
     private var emotionalLevel: EmotionalLevel {
@@ -144,6 +161,18 @@ struct TapPrisonView: View {
         switch emotionalLevel {
         case .inspirational:
             return PrisonMessageSet(
+                leadIns: [
+                    "Remember this: ",
+                    "A better choice is still here: ",
+                    "Your next win starts now: ",
+                    "Give yourself this moment: ",
+                    "You are capable of more: ",
+                    "Take your attention back: ",
+                    "Choose the life around you: ",
+                    "Make this pause count: ",
+                    "Your future self needs this: ",
+                    "One honest reminder: "
+                ],
                 progress: [
                     "You noticed the habit. That is where change starts.",
                     "Ten taps noticed. You can stop before eleven.",
@@ -170,6 +199,18 @@ struct TapPrisonView: View {
             )
         case .nice:
             return PrisonMessageSet(
+                leadIns: [
+                    "A gentle reminder: ",
+                    "Be honest with yourself: ",
+                    "You can choose differently: ",
+                    "Take one quiet second: ",
+                    "No judgment, just notice: ",
+                    "Give yourself another option: ",
+                    "Before you continue: ",
+                    "Protect your time here: ",
+                    "You deserve a real pause: ",
+                    "Try being kind to tomorrow: "
+                ],
                 progress: [
                     "Take a breath. Do you really need the app?",
                     "It is okay to put the phone down.",
@@ -196,6 +237,18 @@ struct TapPrisonView: View {
             )
         case .normal:
             return PrisonMessageSet(
+                leadIns: [
+                    "Current status: ",
+                    "The practical truth: ",
+                    "What is happening right now: ",
+                    "The habit check: ",
+                    "For the record: ",
+                    "The cost is simple: ",
+                    "This pause has a purpose: ",
+                    "The pattern is clear: ",
+                    "One useful fact: ",
+                    "The next choice matters: "
+                ],
                 progress: [
                     "Your daily limit has been reached.",
                     "Frequent checking makes focused work harder.",
@@ -222,6 +275,18 @@ struct TapPrisonView: View {
             )
         case .sortaMean:
             return PrisonMessageSet(
+                leadIns: [
+                    "Quick reality check: ",
+                    "Since subtlety failed: ",
+                    "Here we are again: ",
+                    "Your excuses called: ",
+                    "Breaking news: ",
+                    "A note from your self-control: ",
+                    "This is awkward: ",
+                    "Against your better judgment: ",
+                    "The phone appreciates your loyalty: ",
+                    "Congratulations, apparently: "
+                ],
                 progress: [
                     "Still doomscrolling? Wow...",
                     "Did you give up on your dreams?",
@@ -248,6 +313,18 @@ struct TapPrisonView: View {
             )
         case .rager:
             return PrisonMessageSet(
+                leadIns: [
+                    "LISTEN UP! ",
+                    "REALITY CHECK! ",
+                    "ENOUGH EXCUSES! ",
+                    "WAKE UP! ",
+                    "HERE'S THE TRUTH! ",
+                    "STOP PRETENDING! ",
+                    "PAY ATTENTION! ",
+                    "THIS IS YOUR WARNING! ",
+                    "NO MORE NONSENSE! ",
+                    "READ THIS TWICE! "
+                ],
                 progress: [
                     "STOP RIGHT NOW!! PUT THE PHONE DOWN!",
                     "YOU HIT YOUR LIMIT AND RAN STRAIGHT BACK!",
@@ -273,6 +350,18 @@ struct TapPrisonView: View {
                 ]
             )
         }
+    }
+
+    private func prepareMessageRotation() {
+        guard preparedEmotionalLevel != emotionalLevel else { return }
+
+        let defaults = UserDefaults(suiteName: TapJailConstants.appGroupID)
+        let key = "\(TapJailConstants.StorageKey.prisonMessageRotation).\(emotionalLevel.rawValue)"
+        let nextRotation = defaults?.integer(forKey: key) ?? 0
+
+        messageRotation = nextRotation % messageSet.leadIns.count
+        defaults?.set((nextRotation + 1) % messageSet.leadIns.count, forKey: key)
+        preparedEmotionalLevel = emotionalLevel
     }
 
     private var backButton: some View {

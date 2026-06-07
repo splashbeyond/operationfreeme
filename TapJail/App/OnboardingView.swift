@@ -4,9 +4,17 @@ import StoreKit
 import SwiftUI
 import UserNotifications
 
+private struct OnboardingSource: Identifiable {
+    let id = UUID()
+    let title: String
+    let detail: String
+    let url: URL
+}
+
 struct OnboardingView: View {
     @Binding var route: AppRoute
     @EnvironmentObject private var jail: JailController
+    @EnvironmentObject private var purchases: PurchaseManager
 
     @State private var step = 0
 
@@ -37,6 +45,8 @@ struct OnboardingView: View {
     // Notifications screen (step 21)
     @State private var notifCardsVisible = false
 
+    // Sources
+    @State private var showSources = false
 
     // Star review (step 18)
     @State private var starRating = 0
@@ -48,6 +58,28 @@ struct OnboardingView: View {
 
     private let sleepYears = 27
     private let workYears = 13
+    private let onboardingSources: [OnboardingSource] = [
+        OnboardingSource(
+            title: "Task Switching",
+            detail: "The American Psychological Association summarizes research on switching costs and lost productive time.",
+            url: URL(string: "https://www.apa.org/research/action/multitask")!
+        ),
+        OnboardingSource(
+            title: "Phone Notifications",
+            detail: "Pielot, Church, and de Oliveira measured real-world mobile notifications and found a median of 63.5 notifications per day.",
+            url: URL(string: "https://pielot.org/pubs/Pielot2014-MobileHCI-Notifications-InfoBites.pdf")!
+        ),
+        OnboardingSource(
+            title: "Bedtime Screens",
+            detail: "Hjetland and colleagues found screen use in bed was associated with higher insomnia odds and shorter sleep duration.",
+            url: URL(string: "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2025.1548273/full")!
+        ),
+        OnboardingSource(
+            title: "Screen Time and Mental Health",
+            detail: "A National Survey of Children's Health analysis linked 4+ hours of screen time with higher odds of depression and anxiety.",
+            url: URL(string: "https://pubmed.ncbi.nlm.nih.gov/33721600/")!
+        )
+    ]
 
     private var isAuthorized: Bool {
         switch jail.authorizationStatus {
@@ -146,6 +178,11 @@ struct OnboardingView: View {
             }
             .id(step)
             .transition(pageTransition)
+        }
+        .sheet(isPresented: $showSources) {
+            sourcesSheet
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -784,9 +821,9 @@ struct OnboardingView: View {
     private var screenTimeScoreReason: String {
         switch screenTimeScore {
         case 75...:
-            return "Better than most — but this still adds up to \(yearsLost) years of your life."
+            return "Better than most — but this still adds up to ~\(yearsLost) years of your life."
         case 55...:
-            return "In the average range. That's \(yearsLost) years gone to a screen."
+            return "In the average range. That's ~\(yearsLost) years projected for a screen."
         case 35...:
             return "Your phone is consuming a significant chunk of your waking life."
         case 20...:
@@ -895,7 +932,7 @@ struct OnboardingView: View {
 
             Spacer().frame(height: 12)
 
-            Text("\(yearsLost) years")
+            Text("~\(yearsLost) years")
                 .font(.tapJail(72, weight: .bold))
                 .foregroundStyle(TapJailColor.red)
 
@@ -907,7 +944,7 @@ struct OnboardingView: View {
 
             Spacer().frame(height: 20)
 
-            Text("Projection based on your answers.")
+            Text("Projection based on your answers and an 80-year life.")
                 .font(.tapJail(12))
                 .foregroundStyle(TapJailColor.muted.opacity(0.6))
 
@@ -948,13 +985,18 @@ struct OnboardingView: View {
             VStack(spacing: 8) {
                 HStack(spacing: 20) {
                     legendDot(color: TapJailColor.raised, label: "\(freeYears) yrs free time")
-                    legendDot(color: TapJailColor.red, label: "\(yearsLost) yrs screen time")
+                    legendDot(color: TapJailColor.red, label: "~\(yearsLost) yrs screen time")
                 }
                 HStack(spacing: 20) {
                     legendDot(color: TapJailColor.blue, label: "\(sleepYears) yrs asleep")
                     legendDot(color: TapJailColor.green, label: "\(workYears) yrs working")
                 }
             }
+
+            Text("Based on an 80-year life.")
+                .font(.tapJail(11))
+                .foregroundStyle(TapJailColor.muted.opacity(0.55))
+                .padding(.top, 10)
 
             Spacer()
 
@@ -1001,11 +1043,11 @@ struct OnboardingView: View {
 
             Spacer().frame(height: 8)
 
-            Text("TapJail can help you reclaim")
+            Text("TapJail could help you reclaim")
                 .font(.tapJail(22, weight: .bold))
                 .foregroundStyle(TapJailColor.white)
 
-            Text("\(yearsRecovered) years")
+            Text("~\(yearsRecovered) years")
                 .font(.tapJail(64, weight: .bold))
                 .foregroundStyle(TapJailColor.green)
 
@@ -1056,7 +1098,7 @@ struct OnboardingView: View {
             VStack(spacing: 8) {
                 HStack(spacing: 20) {
                     legendDot(color: TapJailColor.raised, label: "\(freeYears) yrs free time")
-                    legendDot(color: TapJailColor.red, label: "\(yearsLost) yrs screen time")
+                    legendDot(color: TapJailColor.red, label: "~\(yearsLost) yrs screen time")
                 }
                 HStack(spacing: 20) {
                     legendDot(color: TapJailColor.blue, label: "\(sleepYears) yrs asleep")
@@ -1068,7 +1110,7 @@ struct OnboardingView: View {
                             Circle().fill(TapJailColor.red).frame(width: 10, height: 10)
                             Circle().stroke(Color.purple, lineWidth: 2).frame(width: 10, height: 10)
                         }
-                        Text("\(yearsRecovered) yrs saved with TapJail")
+                        Text("~\(yearsRecovered) yrs possible time back")
                             .font(.tapJail(12))
                             .foregroundStyle(TapJailColor.muted)
                     }
@@ -1076,14 +1118,19 @@ struct OnboardingView: View {
                 }
             }
 
+            Text("Based on an 80-year life.")
+                .font(.tapJail(11))
+                .foregroundStyle(TapJailColor.muted.opacity(0.55))
+                .padding(.top, 10)
+
             Spacer().frame(height: 32)
 
             if tsPhoneYearsReduced {
                 VStack(spacing: 6) {
-                    Text("\(yearsRecovered) years")
+                    Text("~\(yearsRecovered) years")
                         .font(.tapJail(48, weight: .bold))
                         .foregroundStyle(TapJailColor.green)
-                    Text("back in your life.")
+                    Text("potentially back in your life.")
                         .font(.tapJail(18))
                         .foregroundStyle(TapJailColor.muted)
                 }
@@ -1195,25 +1242,37 @@ struct OnboardingView: View {
             VStack(spacing: 12) {
                 researchCard(
                     icon: "brain.head.profile",
-                    stat: "23 minutes",
-                    detail: "to refocus after one phone notification. Most people get 50+ per day."
+                    stat: "63.5/day",
+                    detail: "median mobile notifications recorded per participant in a small one-week in-situ study."
                 )
                 researchCard(
                     icon: "chart.line.downtrend.xyaxis",
-                    stat: "40% less",
-                    detail: "work gets done when you keep switching between your phone and a task."
+                    stat: "Up to 40%",
+                    detail: "productive time can be lost to task switching, according to APA's summary of multitasking research."
                 )
                 researchCard(
                     icon: "moon.zzz",
-                    stat: "1–2 hours",
-                    detail: "of sleep lost per night for heavy phone users. That's 30 days a year."
+                    stat: "~24 min",
+                    detail: "less sleep per extra hour of screen use in bed in a large university-student study."
                 )
                 researchCard(
                     icon: "heart.slash",
-                    stat: "2× more likely",
-                    detail: "to report anxiety and depression with 5+ hours of daily screen time."
+                    stat: "2.23× odds",
+                    detail: "of depression among adolescents reporting 4+ hours of daily screen time in one national survey analysis."
                 )
             }
+
+            Button {
+                showSources = true
+            } label: {
+                Label("Sources", systemImage: "link")
+                    .font(.tapJail(14, weight: .bold))
+                    .foregroundStyle(TapJailColor.muted)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Shows the research sources behind these claims.")
 
             Spacer()
 
@@ -1560,7 +1619,7 @@ struct OnboardingView: View {
         scrollScreen {
             Spacer().frame(height: 16)
 
-            Text("Here's what changes.")
+            Text("Here's what could change.")
                 .font(.tapJail(28, weight: .bold))
                 .foregroundStyle(TapJailColor.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1581,6 +1640,11 @@ struct OnboardingView: View {
                     accentColor: TapJailColor.green
                 )
             }
+
+            Text("Illustrative projection based on your answers. Results are not guaranteed.")
+                .font(.tapJail(11))
+                .foregroundStyle(TapJailColor.muted.opacity(0.6))
+                .fixedSize(horizontal: false, vertical: true)
 
             Spacer().frame(height: 28)
 
@@ -1696,30 +1760,73 @@ struct OnboardingView: View {
 
     private var paywallScreen: some View {
         PaywallView(displayCloseButton: false)
-            .onPurchaseCompleted { _ in
-                finishOnboarding()
+            .onPurchaseCompleted { customerInfo in
+                purchases.updateCustomerInfo(customerInfo)
+                finishOnboardingIfEntitled()
             }
-            .onRestoreCompleted { _ in
-                finishOnboarding()
-            }
-            .overlay(alignment: .topTrailing) {
-                Button(action: finishOnboarding) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(TapJailColor.white)
-                        .frame(width: 36, height: 36)
-                        .background(TapJailColor.black.opacity(0.72))
-                        .clipShape(Circle())
-                }
-                .accessibilityLabel("Set up later")
-                .padding(.top, 14)
-                .padding(.trailing, 16)
+            .onRestoreCompleted { customerInfo in
+                purchases.updateCustomerInfo(customerInfo)
+                finishOnboardingIfEntitled()
             }
     }
 
-    private func finishOnboarding() {
+    private func finishOnboardingIfEntitled() {
+        guard purchases.isPro else {
+            return
+        }
+
         jail.completeOnboarding()
         withAnimation { route = .lock }
+    }
+
+    private var sourcesSheet: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Research can show associations and averages, not guarantee individual outcomes.")
+                        .font(.tapJail(14))
+                        .foregroundStyle(TapJailColor.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.bottom, 4)
+
+                    ForEach(onboardingSources) { source in
+                        Link(destination: source.url) {
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: "arrow.up.right.square")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(TapJailColor.green)
+                                    .frame(width: 28, height: 28)
+
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text(source.title)
+                                        .font(.tapJail(16, weight: .bold))
+                                        .foregroundStyle(TapJailColor.white)
+
+                                    Text(source.detail)
+                                        .font(.tapJail(13))
+                                        .foregroundStyle(TapJailColor.muted)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+
+                                Spacer(minLength: 0)
+                            }
+                            .padding(16)
+                            .background(TapJailColor.surface)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(TapJailColor.divider, lineWidth: 1)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(20)
+            }
+            .background(TapJailColor.black)
+            .navigationTitle("Sources")
+            .navigationBarTitleDisplayMode(.inline)
+        }
     }
 
     private func badgeLabel(_ text: String) -> some View {
