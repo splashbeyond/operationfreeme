@@ -37,8 +37,6 @@ struct OnboardingView: View {
     // Notifications screen (step 21)
     @State private var notifCardsVisible = false
 
-    // Paywall
-    @State private var showPaywall = false
 
     // Star review (step 18)
     @State private var starRating = 0
@@ -1697,91 +1695,26 @@ struct OnboardingView: View {
     // MARK: - Step 22 (default): Paywall
 
     private var paywallScreen: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                Spacer().frame(height: 80)
-
-                Image("TapJailLogo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 120, height: 120)
-
-                Spacer().frame(height: 24)
-
-                Text("Lock in.\nGet your time back.")
-                    .font(.tapJail(32, weight: .bold))
-                    .foregroundStyle(TapJailColor.white)
-                    .multilineTextAlignment(.center)
-
-                Spacer().frame(height: 12)
-
-                HStack(spacing: 12) {
-                    badgeLabel("Tap to break out")
-                    badgeLabel("Resets nightly")
-                }
-
-                Spacer().frame(height: 12)
-
-                Text("No lecturing. No motivational quotes. Just a hard door and a price to open it.")
-                    .font(.tapJail(15))
-                    .foregroundStyle(TapJailColor.muted)
-                    .multilineTextAlignment(.center)
-
-                Spacer().frame(height: 32)
-
-                // MARK: RevenueCat paywall mounts here
-                VStack(spacing: 10) {
-                    planCard(
-                        title: "Yearly",
-                        price: "$0.77 / week",
-                        detail: "Billed $39.99 / year",
-                        highlighted: true
-                    )
-                    planCard(
-                        title: "Weekly",
-                        price: "$4.99 / week",
-                        detail: "",
-                        highlighted: false
-                    )
-                }
-                // MARK: End RevenueCat slot
-
-                Spacer().frame(height: 24)
-
-                primaryButton("Start TapJail") {
-                    Task {
-                        if !isAuthorized {
-                            await jail.requestAuthorization()
-                        }
-                        jail.completeOnboarding()
-                        showPaywall = true
-                    }
-                }
-                .padding(.horizontal, 24)
-
+        PaywallView(displayCloseButton: false)
+            .onPurchaseCompleted { _ in
+                jail.completeOnboarding()
+                withAnimation { route = .lock }
+            }
+            .onRestoreCompleted { _ in
+                jail.completeOnboarding()
+                withAnimation { route = .lock }
+            }
+            .safeAreaInset(edge: .bottom) {
                 Button("Skip for now") {
                     jail.completeOnboarding()
                     withAnimation { route = .lock }
                 }
                 .font(.tapJail(15))
                 .foregroundStyle(TapJailColor.muted)
-                .padding(.top, 12)
-
-                Spacer().frame(height: 8)
-
-                Text("Cancel anytime · Restore Purchase")
-                    .font(.tapJail(11))
-                    .foregroundStyle(TapJailColor.muted.opacity(0.5))
-
-                Spacer().frame(height: 40)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(TapJailColor.black)
             }
-            .padding(.horizontal, 24)
-        }
-        .fullScreenCover(isPresented: $showPaywall, onDismiss: {
-            withAnimation { route = .lock }
-        }) {
-            TapJailPaywallView()
-        }
     }
 
     private func badgeLabel(_ text: String) -> some View {
