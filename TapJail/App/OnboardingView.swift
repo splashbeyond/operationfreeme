@@ -1695,12 +1695,16 @@ struct OnboardingView: View {
     // MARK: - Step 22 (default): Paywall
 
     private var paywallScreen: some View {
-        PaywallView(displayCloseButton: false)
+        PaywallView(displayCloseButton: true)
             .onPurchaseCompleted { _ in
                 jail.completeOnboarding()
                 withAnimation { route = .lock }
             }
             .onRestoreCompleted { _ in
+                jail.completeOnboarding()
+                withAnimation { route = .lock }
+            }
+            .onDismiss {
                 jail.completeOnboarding()
                 withAnimation { route = .lock }
             }
