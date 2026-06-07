@@ -1704,17 +1704,6 @@ struct OnboardingView: View {
                 jail.completeOnboarding()
                 withAnimation { route = .lock }
             }
-            .safeAreaInset(edge: .bottom) {
-                Button("Skip for now") {
-                    jail.completeOnboarding()
-                    withAnimation { route = .lock }
-                }
-                .font(.tapJail(15))
-                .foregroundStyle(TapJailColor.muted)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(TapJailColor.black)
-            }
     }
 
     private func badgeLabel(_ text: String) -> some View {
