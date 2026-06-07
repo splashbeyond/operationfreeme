@@ -7,10 +7,11 @@ import RevenueCat
 struct TapJailApp: App {
     @UIApplicationDelegateAdaptor(TapJailAppDelegate.self) private var appDelegate
     @StateObject private var jail = JailController()
-    @StateObject private var purchases = PurchaseManager.shared
+    @StateObject private var purchases: PurchaseManager
 
     init() {
         Purchases.configure(withAPIKey: TapJailConstants.RevenueCat.apiKey)
+        _purchases = StateObject(wrappedValue: PurchaseManager.shared)
     }
 
     @State private var route: AppRoute = .lock

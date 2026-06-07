@@ -11,27 +11,17 @@ enum TapJailConstants {
         static let activeSessionBudget = DeviceActivityName("tapjail.active-session-budget")
         static let extensionBudget = DeviceActivityName("tapjail.extension-budget")
         static let dailyTracking = DeviceActivityName("tapjail.daily-tracking")
-        static let extensionMinutes = 15
-        static let minimumBudgetMinutes = 15
-        static let maximumBudgetMinutes = 480
-        static let budgetStepMinutes = 15
+        static let extensionMinutes = BudgetPolicy.extensionMinutes
+        static let minimumBudgetMinutes = BudgetPolicy.minimumMinutes
+        static let maximumBudgetMinutes = BudgetPolicy.maximumMinutes
+        static let budgetStepMinutes = BudgetPolicy.stepMinutes
 
         static var supportedBudgetMinutes: [Int] {
-            Array(
-                stride(
-                    from: minimumBudgetMinutes,
-                    through: maximumBudgetMinutes,
-                    by: budgetStepMinutes
-                )
-            )
+            BudgetPolicy.supportedMinutes
         }
 
         static func normalizedBudgetMinutes(_ minutes: Int) -> Int {
-            let clamped = min(max(minutes, minimumBudgetMinutes), maximumBudgetMinutes)
-            let steps = Int(
-                (Double(clamped) / Double(budgetStepMinutes)).rounded()
-            )
-            return steps * budgetStepMinutes
+            BudgetPolicy.normalizedMinutes(minutes)
         }
 
         static func event(for stage: Int) -> DeviceActivityEvent.Name {
@@ -45,18 +35,7 @@ enum TapJailConstants {
         }
 
         static func tapsRequired(for stage: Int) -> Int {
-            switch stage {
-            case 0:
-                return 100
-            case 1:
-                return 200
-            case 2:
-                return 400
-            case 3:
-                return 800
-            default:
-                return 1_000
-            }
+            BudgetPolicy.tapsRequired(for: stage)
         }
     }
 

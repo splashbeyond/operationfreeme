@@ -48,6 +48,10 @@
 		72C73F572FD4FFBB000A1BC9 /* CustomerCenterSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72C73F532FD4FFBB000A1BC9 /* CustomerCenterSheet.swift */; };
 		72C73F582FD4FFBB000A1BC9 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72C73F542FD4FFBB000A1BC9 /* PaywallView.swift */; };
 		72C73F592FD4FFBB000A1BC9 /* PurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72C73F552FD4FFBB000A1BC9 /* PurchaseManager.swift */; };
+		72C73F5A2FD50000000A1BC9 /* BudgetPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72C73F5E2FD50000000A1BC9 /* BudgetPolicy.swift */; };
+		72C73F5B2FD50000000A1BC9 /* BudgetPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72C73F5E2FD50000000A1BC9 /* BudgetPolicy.swift */; };
+		72C73F5C2FD50000000A1BC9 /* BudgetPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72C73F5E2FD50000000A1BC9 /* BudgetPolicy.swift */; };
+		72C73F5D2FD50000000A1BC9 /* BudgetPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72C73F5E2FD50000000A1BC9 /* BudgetPolicy.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -146,6 +150,7 @@
 		72C73F532FD4FFBB000A1BC9 /* CustomerCenterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomerCenterSheet.swift; sourceTree = "<group>"; };
 		72C73F542FD4FFBB000A1BC9 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		72C73F552FD4FFBB000A1BC9 /* PurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseManager.swift; sourceTree = "<group>"; };
+		72C73F5E2FD50000000A1BC9 /* BudgetPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetPolicy.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -232,6 +237,7 @@
 		100000000000000000000804 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				72C73F5E2FD50000000A1BC9 /* BudgetPolicy.swift */,
 				100000000000000000000106 /* TapJailConstants.swift */,
 			);
 			path = Shared;
@@ -555,6 +561,7 @@
 				100000000000000000000004 /* LockView.swift in Sources */,
 				100000000000000000000005 /* TapPrisonView.swift in Sources */,
 				100000000000000000000006 /* TapJailConstants.swift in Sources */,
+				72C73F5A2FD50000000A1BC9 /* BudgetPolicy.swift in Sources */,
 				100000000000000000000021 /* OnboardingView.swift in Sources */,
 				72C73F572FD4FFBB000A1BC9 /* CustomerCenterSheet.swift in Sources */,
 				72C73F582FD4FFBB000A1BC9 /* PaywallView.swift in Sources */,
@@ -568,6 +575,7 @@
 			files = (
 				100000000000000000000008 /* ShieldConfigurationExtension.swift in Sources */,
 				10000000000000000000001F /* TapJailConstants.swift in Sources */,
+				72C73F5B2FD50000000A1BC9 /* BudgetPolicy.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -577,6 +585,7 @@
 			files = (
 				100000000000000000000009 /* ShieldActionExtension.swift in Sources */,
 				100000000000000000000020 /* TapJailConstants.swift in Sources */,
+				72C73F5C2FD50000000A1BC9 /* BudgetPolicy.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -586,6 +595,7 @@
 			files = (
 				10000000000000000000001C /* DeviceActivityMonitorExtension.swift in Sources */,
 				10000000000000000000001D /* TapJailConstants.swift in Sources */,
+				72C73F5D2FD50000000A1BC9 /* BudgetPolicy.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

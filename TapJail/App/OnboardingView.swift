@@ -1695,19 +1695,31 @@ struct OnboardingView: View {
     // MARK: - Step 22 (default): Paywall
 
     private var paywallScreen: some View {
-        PaywallView(displayCloseButton: true)
+        PaywallView(displayCloseButton: false)
             .onPurchaseCompleted { _ in
-                jail.completeOnboarding()
-                withAnimation { route = .lock }
+                finishOnboarding()
             }
             .onRestoreCompleted { _ in
-                jail.completeOnboarding()
-                withAnimation { route = .lock }
+                finishOnboarding()
             }
-            .onDismiss {
-                jail.completeOnboarding()
-                withAnimation { route = .lock }
+            .overlay(alignment: .topTrailing) {
+                Button(action: finishOnboarding) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(TapJailColor.white)
+                        .frame(width: 36, height: 36)
+                        .background(TapJailColor.black.opacity(0.72))
+                        .clipShape(Circle())
+                }
+                .accessibilityLabel("Set up later")
+                .padding(.top, 14)
+                .padding(.trailing, 16)
             }
+    }
+
+    private func finishOnboarding() {
+        jail.completeOnboarding()
+        withAnimation { route = .lock }
     }
 
     private func badgeLabel(_ text: String) -> some View {

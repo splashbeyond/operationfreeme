@@ -4,6 +4,19 @@ These tests validate the first budget milestone: selected activity reaches a dai
 
 ## Before Testing
 
+Run the automated budget matrix first:
+
+```sh
+swiftc TapJail/Shared/BudgetPolicy.swift Scripts/RunBudgetPolicyTests.swift \
+  -o /tmp/tapjail-budget-tests &&
+/tmp/tapjail-budget-tests
+```
+
+This validates every supported 15-minute increment from 15 minutes through
+8 hours, plus normalization and escalation rules. Apple only delivers real
+Device Activity threshold callbacks on a physical device, so the one-minute
+device test below remains the end-to-end callback check.
+
 In Xcode, confirm automatic signing succeeds for all four targets:
 
 - `com.piperstudio.tapjail`
