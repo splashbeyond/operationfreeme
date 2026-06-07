@@ -63,6 +63,7 @@ enum TapJailConstants {
         static let hasSeenOnboarding = "hasSeenOnboarding"
         static let onboardingCompletedAt = "onboardingCompletedAt"
         static let hasSeenSetupGuide = "hasSeenSetupGuide"
+        static let emotionalLevel = "emotionalLevel"
     }
 
     enum RevenueCat {

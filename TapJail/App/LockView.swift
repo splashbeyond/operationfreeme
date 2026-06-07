@@ -607,6 +607,10 @@ private struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var jail: JailController
     @Binding var route: AppRoute
+    @AppStorage(
+        TapJailConstants.StorageKey.emotionalLevel,
+        store: UserDefaults(suiteName: TapJailConstants.appGroupID)
+    ) private var emotionalLevelRawValue = EmotionalLevel.sortaMean.rawValue
 
     var body: some View {
         ScrollView {
@@ -623,6 +627,40 @@ private struct SettingsView: View {
                         value: "Midnight",
                         color: TapJailColor.white
                     )
+                }
+                .homePanel()
+
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Emotional Level")
+                                .font(.tapJail(17, weight: .bold))
+                                .foregroundStyle(TapJailColor.white)
+
+                            Text("Choose how TapJail talks to you in Tap Prison.")
+                                .font(.tapJail(13, weight: .light))
+                                .foregroundStyle(TapJailColor.muted)
+                        }
+
+                        Spacer()
+
+                        Picker("Emotional Level", selection: $emotionalLevelRawValue) {
+                            ForEach(EmotionalLevel.allCases) { level in
+                                Text(level.title).tag(level.rawValue)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .tint(TapJailColor.green)
+                    }
+
+                    Text(emotionalLevel.description)
+                        .font(.tapJailNote(21))
+                        .foregroundStyle(TapJailColor.white)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(14)
+                        .background(TapJailColor.row)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .homePanel()
 
@@ -722,6 +760,10 @@ private struct SettingsView: View {
 
     private var authorizationStatusText: String {
         hasScreenTimeAuthorization ? "Connected" : "Not connected"
+    }
+
+    private var emotionalLevel: EmotionalLevel {
+        EmotionalLevel(rawValue: emotionalLevelRawValue) ?? .sortaMean
     }
 }
 
