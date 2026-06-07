@@ -1,17 +1,25 @@
 import SwiftUI
 import UIKit
 import UserNotifications
+import RevenueCat
 
 @main
 struct TapJailApp: App {
     @UIApplicationDelegateAdaptor(TapJailAppDelegate.self) private var appDelegate
     @StateObject private var jail = JailController()
+    @StateObject private var purchases = PurchaseManager.shared
+
+    init() {
+        Purchases.configure(withAPIKey: TapJailConstants.RevenueCat.apiKey)
+    }
+
     @State private var route: AppRoute = .lock
 
     var body: some Scene {
         WindowGroup {
             RootView(route: $route)
                 .environmentObject(jail)
+                .environmentObject(purchases)
                 .preferredColorScheme(.dark)
                 .onOpenURL { url in
                     guard url.scheme == TapJailConstants.urlScheme else { return }

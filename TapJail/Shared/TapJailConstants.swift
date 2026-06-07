@@ -86,6 +86,19 @@ enum TapJailConstants {
         static let hasSeenSetupGuide = "hasSeenSetupGuide"
     }
 
+    enum RevenueCat {
+        // Replace with production key before App Store submission
+        static let apiKey = "appl_ZBWIGTDEzMQSByksQhujBNldruS"
+        static let proEntitlement = "TapJail Pro"
+
+        enum ProductID {
+            static let weekly   = "weekly"
+            static let monthly  = "monthly"
+            static let yearly   = "yearly"
+            static let lifetime = "lifetime"
+        }
+    }
+
     static func localDayIdentifier(for date: Date = Date()) -> String {
         let components = Calendar.current.dateComponents([.year, .month, .day], from: date)
         return "\(components.year ?? 0)-\(components.month ?? 0)-\(components.day ?? 0)"

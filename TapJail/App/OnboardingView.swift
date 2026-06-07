@@ -1,4 +1,5 @@
 import Charts
+import RevenueCatUI
 import StoreKit
 import SwiftUI
 import UserNotifications
@@ -35,6 +36,9 @@ struct OnboardingView: View {
 
     // Notifications screen (step 21)
     @State private var notifCardsVisible = false
+
+    // Paywall
+    @State private var showPaywall = false
 
     // Star review (step 18)
     @State private var starRating = 0
@@ -1750,7 +1754,7 @@ struct OnboardingView: View {
                             await jail.requestAuthorization()
                         }
                         jail.completeOnboarding()
-                        withAnimation { route = .lock }
+                        showPaywall = true
                     }
                 }
                 .padding(.horizontal, 24)
@@ -1772,6 +1776,11 @@ struct OnboardingView: View {
                 Spacer().frame(height: 40)
             }
             .padding(.horizontal, 24)
+        }
+        .fullScreenCover(isPresented: $showPaywall, onDismiss: {
+            withAnimation { route = .lock }
+        }) {
+            TapJailPaywallView()
         }
     }
 
