@@ -1,5 +1,4 @@
 import Charts
-import RevenueCatUI
 import StoreKit
 import SwiftUI
 import UserNotifications
@@ -1759,15 +1758,7 @@ struct OnboardingView: View {
     // MARK: - Step 22 (default): Paywall
 
     private var paywallScreen: some View {
-        PaywallView(displayCloseButton: false)
-            .onPurchaseCompleted { customerInfo in
-                purchases.updateCustomerInfo(customerInfo)
-                finishOnboardingIfEntitled()
-            }
-            .onRestoreCompleted { customerInfo in
-                purchases.updateCustomerInfo(customerInfo)
-                finishOnboardingIfEntitled()
-            }
+        TapJailPaywallView(onEntitlementUnlocked: finishOnboardingIfEntitled)
     }
 
     private func finishOnboardingIfEntitled() {

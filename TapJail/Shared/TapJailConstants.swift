@@ -80,6 +80,15 @@ enum TapJailConstants {
         }
     }
 
+    enum Legal {
+        static let privacyPolicyURL = URL(
+            string: "https://splashbeyond.github.io/tapjail/privacy.html"
+        )!
+        static let termsOfUseURL = URL(
+            string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+        )!
+    }
+
     static func localDayIdentifier(for date: Date = Date()) -> String {
         let components = Calendar.current.dateComponents([.year, .month, .day], from: date)
         return "\(components.year ?? 0)-\(components.month ?? 0)-\(components.day ?? 0)"
