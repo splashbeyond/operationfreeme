@@ -9,7 +9,15 @@ struct TapJailPaywallView: View {
     @State private var selectedPackageIdentifier: String?
 
     private var packages: [Package] {
-        purchases.offerings?.current?.availablePackages ?? []
+        let availablePackages = purchases.offerings?.current?.availablePackages ?? []
+
+        return availablePackages
+            .filter { package in
+                isYearly(package) || isWeekly(package)
+            }
+            .sorted { lhs, rhs in
+                isYearly(lhs) && !isYearly(rhs)
+            }
     }
 
     private var selectedPackage: Package? {
@@ -113,6 +121,17 @@ struct TapJailPaywallView: View {
                             .foregroundStyle(isSelected ? TapJailColor.green : TapJailColor.muted)
 
                         VStack(alignment: .leading, spacing: 4) {
+                            if isYearly(package) {
+                                Text("80% OFF")
+                                    .font(.tapJail(10, weight: .bold))
+                                    .foregroundStyle(TapJailColor.black)
+                                    .tracking(0.6)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(TapJailColor.green)
+                                    .clipShape(Capsule())
+                            }
+
                             Text(planName(for: package))
                                 .font(.tapJail(17, weight: .bold))
                                 .foregroundStyle(TapJailColor.white)
@@ -335,6 +354,18 @@ struct TapJailPaywallView: View {
     private func isLifetime(_ package: Package) -> Bool {
         package.storeProduct.productIdentifier.lowercased().contains(
             TapJailConstants.RevenueCat.ProductID.lifetime
+        )
+    }
+
+    private func isYearly(_ package: Package) -> Bool {
+        package.storeProduct.productIdentifier.lowercased().contains(
+            TapJailConstants.RevenueCat.ProductID.yearly
+        )
+    }
+
+    private func isWeekly(_ package: Package) -> Bool {
+        package.storeProduct.productIdentifier.lowercased().contains(
+            TapJailConstants.RevenueCat.ProductID.weekly
         )
     }
 }
