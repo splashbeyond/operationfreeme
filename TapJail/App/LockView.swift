@@ -669,6 +669,35 @@ private struct SettingsView: View {
                     .buttonStyle(TapJailPrimaryButtonStyle())
                 }
 
+                VStack(spacing: 0) {
+                    Link(destination: TapJailConstants.Legal.privacyPolicyURL) {
+                        HStack {
+                            Text("Privacy Policy")
+                                .foregroundStyle(TapJailColor.white)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(TapJailColor.muted)
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .font(.tapJail(16, weight: .regular))
+                        .padding(.vertical, 15)
+                    }
+                    Divider().overlay(TapJailColor.divider)
+                    Link(destination: TapJailConstants.Legal.termsOfUseURL) {
+                        HStack {
+                            Text("Terms of Use")
+                                .foregroundStyle(TapJailColor.white)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(TapJailColor.muted)
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .font(.tapJail(16, weight: .regular))
+                        .padding(.vertical, 15)
+                    }
+                }
+                .homePanel()
+
             }
             .padding(20)
         }

@@ -82,10 +82,10 @@ enum TapJailConstants {
 
     enum Legal {
         static let privacyPolicyURL = URL(
-            string: "https://splashbeyond.github.io/tapjail/privacy.html"
+            string: "https://tapjail.vercel.app/privacy.html"
         )!
         static let termsOfUseURL = URL(
-            string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+            string: "https://tapjail.vercel.app/terms.html"
         )!
     }
 
