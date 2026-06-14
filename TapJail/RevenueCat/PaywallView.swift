@@ -30,8 +30,11 @@ struct TapJailPaywallView: View {
             TapJailColor.black.ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 20) {
                     header
+                    timeBackCard
+                    outcomes
+                    commitmentCard
 
                     if packages.isEmpty {
                         unavailableState
@@ -86,19 +89,20 @@ struct TapJailPaywallView: View {
     }
 
     private var header: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 14) {
             Image("TapJailIcon")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 72, height: 72)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
-            Text("Unlock TapJail Pro")
-                .font(.tapJail(30, weight: .bold))
+            Text("Make a commitment\nto your time.")
+                .font(.tapJail(32, weight: .bold))
                 .foregroundStyle(TapJailColor.white)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
 
-            Text("Set daily app limits and use TapJail's full blocking experience.")
+            Text("TapJail adds real friction between you and the apps you open without thinking.")
                 .font(.tapJail(16))
                 .foregroundStyle(TapJailColor.muted)
                 .multilineTextAlignment(.center)
@@ -106,8 +110,161 @@ struct TapJailPaywallView: View {
         }
     }
 
+    private var timeBackCard: some View {
+        VStack(spacing: 10) {
+            Text("WHAT ONE LESS HOUR A DAY ADDS UP TO")
+                .font(.tapJail(11, weight: .bold))
+                .foregroundStyle(TapJailColor.green)
+                .tracking(1.1)
+                .multilineTextAlignment(.center)
+
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("365")
+                    .font(.tapJail(48, weight: .bold))
+                    .foregroundStyle(TapJailColor.white)
+                    .monospacedDigit()
+
+                Text("hours a year")
+                    .font(.tapJail(18, weight: .bold))
+                    .foregroundStyle(TapJailColor.muted)
+            }
+            .accessibilityElement(children: .combine)
+
+            Text("That is about 15 full days you can spend on the rest of your life.")
+                .font(.tapJail(15))
+                .foregroundStyle(TapJailColor.white)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Based on reducing screen time by one hour per day. Individual results vary.")
+                .font(.tapJail(11))
+                .foregroundStyle(TapJailColor.muted.opacity(0.8))
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 20)
+        .background(
+            LinearGradient(
+                colors: [
+                    TapJailColor.green.opacity(0.2),
+                    TapJailColor.surface
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(TapJailColor.green.opacity(0.55), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private var outcomes: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("WHAT YOU ARE GETTING BACK")
+                .font(.tapJail(12, weight: .bold))
+                .foregroundStyle(TapJailColor.muted)
+                .tracking(1.1)
+
+            outcomeRow(
+                icon: "brain.head.profile",
+                title: "Your attention",
+                detail: "Interrupt automatic app opens before they become another lost hour."
+            )
+
+            outcomeRow(
+                icon: "person.2.fill",
+                title: "More presence",
+                detail: "Create space for people, work, rest, and everything beyond the screen."
+            )
+
+            outcomeRow(
+                icon: "checkmark.circle.fill",
+                title: "A choice you control",
+                detail: "Use apps when they are worth the taps, not simply because they are there."
+            )
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(TapJailColor.surface)
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(TapJailColor.divider, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func outcomeRow(icon: String, title: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(TapJailColor.green)
+                .frame(width: 32, height: 32)
+                .background(TapJailColor.green.opacity(0.12))
+                .clipShape(Circle())
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.tapJail(16, weight: .bold))
+                    .foregroundStyle(TapJailColor.white)
+
+                Text(detail)
+                    .font(.tapJail(13))
+                    .foregroundStyle(TapJailColor.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var commitmentCard: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "hand.raised.fill")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(TapJailColor.white)
+                .frame(width: 36, height: 36)
+                .background(TapJailColor.red)
+                .clipShape(Circle())
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text("This is a commitment, not a quick fix.")
+                    .font(.tapJail(16, weight: .bold))
+                    .foregroundStyle(TapJailColor.white)
+
+                Text("You choose the limit. TapJail holds the line. Breaking out takes deliberate effort, and the tap requirement increases each time.")
+                    .font(.tapJail(13))
+                    .foregroundStyle(TapJailColor.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(TapJailColor.red.opacity(0.1))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(TapJailColor.red.opacity(0.45), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+
     private var packageOptions: some View {
         VStack(spacing: 12) {
+            Text("CHOOSE YOUR COMMITMENT")
+                .font(.tapJail(12, weight: .bold))
+                .foregroundStyle(TapJailColor.muted)
+                .tracking(1.1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
             ForEach(packages, id: \.identifier) { package in
                 let isSelected = package.identifier == selectedPackage?.identifier
 
@@ -122,7 +279,7 @@ struct TapJailPaywallView: View {
 
                         VStack(alignment: .leading, spacing: 4) {
                             if isYearly(package) {
-                                Text("80% OFF")
+                                Text("BEST VALUE")
                                     .font(.tapJail(10, weight: .bold))
                                     .foregroundStyle(TapJailColor.black)
                                     .tracking(0.6)
@@ -345,10 +502,10 @@ struct TapJailPaywallView: View {
 
     private func purchaseButtonTitle(for package: Package) -> String {
         if isLifetime(package) {
-            return "Buy for \(package.storeProduct.localizedPriceString)"
+            return "Commit to My Time - \(package.storeProduct.localizedPriceString)"
         }
 
-        return "Subscribe for \(package.storeProduct.localizedPriceString) \(billingUnit(for: package))"
+        return "Start My Commitment - \(package.storeProduct.localizedPriceString) \(billingUnit(for: package))"
     }
 
     private func isLifetime(_ package: Package) -> Bool {
